@@ -17,6 +17,9 @@ mongoose
   .then(() => console.log('MongoDB connected...'))
   .catch(err => console.log(err));
 
+// Bind default connection to error event (to get notification of connection errors)
+mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
