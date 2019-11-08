@@ -2,7 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const config = require('config');
 
+const testRouter = require('./routes/testRouter');
+
 const app = express();
+
+// Body parsing middleware
+app.use(express.json());
 
 // MongoDB Config
 const db = config.get('mongoURI');
@@ -27,7 +32,7 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
