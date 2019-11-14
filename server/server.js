@@ -1,13 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const config = require('config');
 
-const testRouter = require('./routes/testRouter');
+const authorizationRouter = require('./routes/authorizationRouter');
 
 const app = express();
 
 // Body parsing middleware
 app.use(express.json());
+app.use(cookieParser());
 
 // MongoDB Config
 const db = config.get('mongoURI');
@@ -31,6 +33,8 @@ connection.once('open', function() {
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+
+app.use('/login', authorizationRouter);
 
 const port = process.env.PORT || 3001;
 
