@@ -1,3 +1,5 @@
+// This includes code from spotify/web-api-auth-examples/authorization_code/app.js
+
 import React, { Component } from 'react';
 import axios from 'axios';
 

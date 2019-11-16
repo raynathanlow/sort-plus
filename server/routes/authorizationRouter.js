@@ -1,4 +1,4 @@
-// This is a modified version of spotify/web-api-auth-examples/authorization_code/app.js
+// This includes code from spotify/web-api-auth-examples/authorization_code/app.js
 
 const express = require('express');
 const router = express.Router();
