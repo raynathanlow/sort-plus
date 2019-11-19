@@ -34,7 +34,7 @@ router.post('/callback', function(req, res) {
       const accessToken = response.data.access_token;
       const refreshToken = response.data.refresh_token;
 
-      // Request current user's profile 
+      // Request curent user's profile 
       axios({
         method: 'get',
         url: 'https://api.spotify.com/v1/me',
@@ -45,7 +45,9 @@ router.post('/callback', function(req, res) {
         .then(response => {
           const id = response.data.id;
 
-          // Create or Update User in database
+	  req.session.user = id;
+	  	  
+	  // Create or Update User in database
           // upsert option is true so that when there are no documents found,
           // a new document is inserted
           User.updateOne(
@@ -53,7 +55,7 @@ router.post('/callback', function(req, res) {
             { spotifyId: id, accessToken: accessToken, refreshToken: refreshToken },
             { upsert: true },
             function() {
-              res.send(id);
+	      res.send(id);
             }
           );
 

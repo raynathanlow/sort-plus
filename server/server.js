@@ -1,5 +1,8 @@
 const express = require('express');
+const session = require('express-session');
+
 const mongoose = require('mongoose');
+
 const cookieParser = require('cookie-parser');
 const config = require('config');
 
@@ -29,6 +32,13 @@ connection.on('error', console.error.bind(console, 'MongoDB connection error:'))
 connection.once('open', function() {
   console.log("MongoDB connected...");
 });
+
+app.use(session({
+  name: 'GozegeSession',
+  secret: 'uzPGdq3LedYXJg2pWp23YbTGCFXRgXuc',
+  resave: false, // Forces session to be saved back to the session store
+  saveUninitialized: false // Forces "uninitialized" session to be saved to the store
+}));
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
