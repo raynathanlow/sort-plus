@@ -59,6 +59,7 @@ router.post('/callback', function(req, res) {
 
 	  req.session.user = spotifyId;
 	  req.session.accessToken = accessToken;
+	  req.session.refreshToken = refreshToken;
 	  
 	  // Create or Update User in database
 	  // upsert option is true so that when there are no documents found,
