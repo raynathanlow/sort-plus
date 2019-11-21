@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const config = require('config');
 
 const authorizationRouter = require('./routes/authorizationRouter');
+const libraryRouter = require('./routes/library');
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/login', authorizationRouter);
+app.use('/library', libraryRouter);
 
 const port = process.env.PORT || 3001;
 

@@ -6,9 +6,8 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  accessToken: {
+  display_name: {
     type: String,
-    required: true
   },
   refreshToken: {
     type: String,

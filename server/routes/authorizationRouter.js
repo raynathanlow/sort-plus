@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 
-const axios = require('axios');
+const request = require('request');
 const config = require('config');
 const querystring = require('querystring');
 
@@ -14,61 +14,67 @@ const stateKey = 'spotify_state';
 router.post('/callback', function(req, res) {
   const code = req.body.code;
 
-  // Request refresh and access tokens
-  axios({
-    method: 'post',
+  const tokenOptions = {
     url: 'https://accounts.spotify.com/api/token',
-    // querystring.stringify encodes in application/x-www-form-urlencoded
-    data: querystring.stringify({
-      grant_type: 'authorization_code',
+    form: {
       code: code,
-      redirect_uri: config.get('redirectUri')
-    }),
+      redirect_uri: config.get('redirectUri'),
+      grant_type: 'authorization_code'
+    },
     headers: {
       'Authorization': 'Basic ' + 
-      Buffer.from((config.get('clientId') + ':' +
-        config.get('clientSecret'))).toString('base64')
-    }
-  })
-    .then(response => {
-      const accessToken = response.data.access_token;
-      const refreshToken = response.data.refresh_token;
+	Buffer.from((config.get('clientId') + ':' +
+		     config.get('clientSecret'))).toString('base64')
+    },
+    json: true
+  }
 
-      // Request curent user's profile 
-      axios({
-        method: 'get',
-        url: 'https://api.spotify.com/v1/me',
-        headers: {
-          'Authorization': 'Bearer ' + accessToken
-        }
-      })
-        .then(response => {
-          const id = response.data.id;
+  // Request tokens
+  request.post(tokenOptions, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+      const accessToken = body.access_token;
+      const refreshToken = body.refresh_token;
 
-	  req.session.user = id;
-	  	  
+      // Request current user's profile
+      const profileOptions = {
+	url: 'https://api.spotify.com/v1/me',
+	headers: {
+	  'Authorization': 'Bearer ' + accessToken
+	},
+	json: true
+      }
+
+      request.get(profileOptions, function(error, response, body) {
+	if (!error && response.statusCode === 200) {
+	  let doc = {}; // MongoDB doc to update
+
+	  const spotifyId = body.id;
+	  
+	  doc.spotifyId = spotifyId;
+	  doc.refreshToken = refreshToken;
+
+	  if (body.display_name !== null) {
+	    doc.display_name = body.display_name;
+	  }
+
+	  req.session.user = spotifyId;
+	  req.session.accessToken = accessToken;
+	  
 	  // Create or Update User in database
-          // upsert option is true so that when there are no documents found,
-          // a new document is inserted
-          User.updateOne(
-            { spotifyId: id },
-            { spotifyId: id, accessToken: accessToken, refreshToken: refreshToken },
-            { upsert: true },
-            function() {
-	      res.send(id);
-            }
-          );
-
-        })
-        .catch(error => {
-          // Invalid token?
-          console.log(error)
-        });
-    })
-    .catch(error => {
-      // Invalid token?
-      console.log(error);
-    });
+	  // upsert option is true so that when there are no documents found,
+	  // a new document is inserted
+	  User.updateOne(
+	    { spotifyId: spotifyId },
+	    doc,
+	    { upsert: true },
+	    function() {
+	      res.send(spotifyId);
+	    }
+	  );
+	}
+      });
+    }
+  });
 });
 
 module.exports = router;
