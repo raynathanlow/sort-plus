@@ -4,14 +4,18 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
   spotifyId: {
     type: String,
-    required: true
+    required: [true, 'No Spotify ID']
   },
   display_name: {
     type: String,
   },
   refreshToken: {
     type: String,
-    required: true
+    required: [true, 'No refresh token']
+  },
+  albumIds: {
+    type: [String],
+    required: [true, 'No album IDs']
   }
 });
 

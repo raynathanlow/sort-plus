@@ -5,12 +5,8 @@ const router = express.Router();
 
 const request = require('request');
 const config = require('config');
-const querystring = require('querystring');
 
 const User = require('../models/User');
-
-const stateKey = 'spotify_state';
-
 router.post('/callback', function(req, res) {
   const code = req.body.code;
 
@@ -67,7 +63,7 @@ router.post('/callback', function(req, res) {
 	  User.updateOne(
 	    { spotifyId: spotifyId },
 	    doc,
-	    { upsert: true },
+	    { upsert: true, runValidators: true },
 	    function() {
 	      res.send(spotifyId);
 	    }

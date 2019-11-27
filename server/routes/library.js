@@ -4,76 +4,212 @@ const router = express.Router();
 const request = require('request');
 const config = require('config');
 
-router.get('/', function(req, res) {
-  // Get current user's access token through session object
-  const accessToken = req.session.accessToken;
+const Album = require('../models/Album');
+const User = require('../models/User');
 
-  // Expired access token
-  // const accessToken = 'BQBGYpfXGGIu72VVPdTNyRqmz3ViLznkfvSmyA-VuH4FgIrLkuNByzh73GoRRh6yMK0xo8Q1UqNDwGffq21G6oK6Ih-uYxSZHJ5P2nN1Zl30jJ_PJigByoocoVcM3Do3BtYctRiC9MwQJsnMhXMq7vrEmV_3KLLWQdiFcKtkjivvPzCOzT7Dwe7Ba8ts';
+// router.get('/', function(req, res) {
+//   // If first time, go to update endpoint
+//   // If not first time, Get data from database
+//   // Then display the library
+//   res.send('Library');
+// });
 
-  const refreshToken = req.session.refreshToken;
+// Should endpoint be /update?
+router.get('/', function (req, res) {
+  const tokens = {
+    // Expired
+    // access: 'BQBGYpfXGGIu72VVPdTNyRqmz3ViLznkfvSmyA-VuH4FgIrLkuNByzh73GoRRh6yMK0xo8Q1UqNDwGffq21G6oK6Ih-uYxSZHJ5P2nN1Zl30jJ_PJigByoocoVcM3Do3BtYctRiC9MwQJsnMhXMq7vrEmV_3KLLWQdiFcKtkjivvPzCOzT7Dwe7Ba8ts',
+    access: req.session.accessToken,
+    refresh: req.session.refreshToken
+  };
 
-  // const refreshToken = 'AQBWOn_Iluf1Sy0_HngZb0_ilUwXUgbmx_rAHyZ5pkZVfWys2-OlVJQBYdUgumrnrgs_Zx7psIWV2fAmBRI6k1bfX_txz0AF2YH5TCDb8F2TCy8pvukOb0aHiszGAJIkik4';
-  
-  let albums = [];
+  console.log(req.session.user);
 
   // Attempt to get current user's saved albums
-  getAlbums('https://api.spotify.com/v1/me/albums?limit=50', accessToken, refreshToken, albums, res);
+  getSavedAlbums('https://api.spotify.com/v1/me/albums?limit=50', tokens, [], req.session.user, res);
 });
 
-function getAlbums(url, accessToken, refreshToken, albums, res) {
+function getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res) {
+  // console.log(endpoint);
+
   const options = {
-    url: url,
+    url: endpoint,
     headers: {
-      'Authorization': 'Bearer ' + accessToken
+      'Authorization': 'Bearer ' + tokens.access
     },
     json: true
   };
 
-  request.get(options, function(error, response, body) {
+  request.get(options, function (error, response, body) {
+    // Refresh access token if it has expired
     if (body.error && body.error.message === 'The access token expired') {
-      refreshAndGetAlbums(url, refreshToken, albums, res);
-    }
-    
-    if (!error & response.statusCode === 200) {
-      albums = albums.concat(body.items);
+      const options = {
+        url: 'https://accounts.spotify.com/api/token',
+        headers: {
+          'Authorization': 'Basic ' +
+            Buffer.from((config.get('clientId') + ':' +
+              config.get('clientSecret'))).toString('base64')
+        },
+        form: {
+          grant_type: 'refresh_token',
+          refresh_token: tokens.refresh
+        },
+        json: true
+      }
 
-      // TODO: Update MongoDB with received data
-      
-      url = body.next;
-      
-      if (url) {
-      	console.log('Getting albums... ' + albums.length + ' got!');
-      	getAlbums(url, accessToken, refreshToken, albums, res);
+      request.post(options, function (error, response, body) {
+        if (!error & response.statusCode === 200) {
+          // Is updating the accessToken key of session object necessary here?
+          tokens.access = body.access_token;
+
+          getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res);
+        }
+      });
+    }
+
+    if (!error & response.statusCode === 200) {
+      // Concatenate saved albums
+      savedAlbums = savedAlbums.concat(body.items);
+
+      // If there is another page, call itself again
+      if (body.next) {
+        getSavedAlbums(body.next, tokens, savedAlbums, spotifyId, res);
       } else {
-	res.send(albums.length.toString());
+        // If there are no more pages, process the albums
+        processAlbums(savedAlbums, tokens, spotifyId, res);
       }
     }
   });
 }
 
-function refreshAndGetAlbums(url, refreshToken, albums, res) {
-  console.log('Refreshing access token...');
-  
-  const options = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: {
-      'Authorization': 'Basic ' + 
-	Buffer.from((config.get('clientId') + ':' +
-		     config.get('clientSecret'))).toString('base64')
-    },
-    form: {
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken
-    },
-    json: true
+function processAlbums(savedAlbums, tokens, spotifyId, res) {
+  let promises = [];
+  let albumIds = []; // For updating current user's library
+
+  for (let savedAlbum of savedAlbums) {
+    albumIds.push(savedAlbum.album.id);
+
+    if (savedAlbum.album.tracks.next !== null) {
+      // If albums have more than one page of tracks
+      promises.push(getRestOfTracks(savedAlbum.album.tracks.next, tokens, savedAlbum.album.tracks.items, savedAlbum));
+    } else {
+      addToDb(savedAlbum.album);
+    }
   }
 
-  request.post(options, function(error, response, body) {
-    if (!error & response.statusCode === 200) {
-      getAlbums(url, body.access_token, refreshToken, albums, res);
-    }
+  // Doc used to update User
+  let doc = {
+    refreshToken: tokens.refresh,
+    albumIds: albumIds
+  }
+
+  User.updateOne(
+  	{ spotifyId: spotifyId },
+  	doc,
+  	{ upsert: true, runValidators: true },
+  	function(error, writeOpResult) {
+      if (error) console.log(error);
+  	}
+  );
+
+  // After processing all of these albums, send a response
+  Promise.all(promises).then(values => {
+    res.send('Done!');
   });
+}
+
+// Similar to getSavedAlbums, but for tracks
+function getRestOfTracks(endpoint, tokens, tracks, savedAlbum) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      url: endpoint,
+      headers: {
+        'Authorization': 'Bearer ' + tokens.access
+      },
+      json: true
+    };
+
+    request.get(options, function (error, response, body) {
+      // Refresh access token if it has expired
+      if (body.error && body.error.message === 'The access token expired') {
+        const options = {
+          url: 'https://accounts.spotify.com/api/token',
+          headers: {
+            'Authorization': 'Basic ' +
+              Buffer.from((config.get('clientId') + ':' +
+                config.get('clientSecret'))).toString('base64')
+          },
+          form: {
+            grant_type: 'refresh_token',
+            refresh_token: tokens.refresh
+          },
+          json: true
+        }
+
+        request.post(options, function (error, response, body) {
+          if (!error & response.statusCode === 200) {
+            // Is updating the accessToken key of session object necessary here?
+            tokens.access = body.access_token;
+
+            getRestOfTracks(endpoint, tokens, tracks, savedAlbum);
+          }
+        });
+      }
+
+      if (!error & response.statusCode === 200) {
+        // Concatenate tracks
+        tracks = tracks.concat(body.items);
+
+        // If there is another page, call itself again
+        if (body.next) {
+          getRestOfTracks(body.next, tokens, tracks, savedAlbum);
+        } else {
+          // If there are no more pages,
+          // Replace original array with new array of tracks
+          savedAlbum.album.tracks.items = tracks;
+
+          addToDb(savedAlbum.album);
+
+          resolve();
+        }
+      }
+    });
+  });
+}
+
+function addToDb(savedAlbum) {
+  // Doc used to update Album
+  let doc = {};
+
+  doc.id = savedAlbum.id;
+  doc.name = savedAlbum.name;
+
+  doc.artistNames = [];
+  for (let artist of savedAlbum.artists) {
+    doc.artistNames.push(artist.name);
+  }
+
+  doc.duration_ms = 0;
+  doc.explicit = false;
+  for (let track of savedAlbum.tracks.items) {
+    doc.duration_ms += track.duration_ms;
+
+    if (track.explicit) doc.explicit = true;
+  }
+
+  doc.releaseYear = +savedAlbum.release_date.substring(0, 4);
+  doc.publicUrl = savedAlbum.external_urls.spotify;
+  doc.images = savedAlbum.images;
+  doc.totalTracks = savedAlbum.tracks.total;
+
+  Album.updateOne(
+  	{ id: savedAlbum.id },
+  	doc,
+  	{ upsert: true, runValidators: true },
+  	function(error, writeOpResult) {
+      if (error) console.log(error);
+  	}
+  );
 }
 
 module.exports = router;
