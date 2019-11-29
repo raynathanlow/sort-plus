@@ -23,10 +23,10 @@ router.get('/', function (req, res) {
     refresh: req.session.refreshToken
   };
 
-  console.log(req.session.user);
-
   // Attempt to get current user's saved albums
-  getSavedAlbums('https://api.spotify.com/v1/me/albums?limit=50', tokens, [], req.session.user, res);
+  // getSavedAlbums('https://api.spotify.com/v1/me/albums?limit=50', tokens, [], req.session.user, res);
+
+  getLibrary('stradition', res);
 });
 
 function getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res) {
@@ -83,38 +83,51 @@ function getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res) {
 }
 
 function processAlbums(savedAlbums, tokens, spotifyId, res) {
-  let promises = [];
-  let albumIds = []; // For updating current user's library
+  let getRestOfTracksPromises = [];
+  let addToDbPromises = [];
+  let savedAlbumsDb = []; // Saved album objects to add to user's document in database
 
   for (let savedAlbum of savedAlbums) {
-    albumIds.push(savedAlbum.album.id);
+    let album = {
+      id: savedAlbum.album.id,
+      added_at: savedAlbum.added_at
+    };
+
+    savedAlbumsDb.push(album);
 
     if (savedAlbum.album.tracks.next !== null) {
-      // If albums have more than one page of tracks
-      promises.push(getRestOfTracks(savedAlbum.album.tracks.next, tokens, savedAlbum.album.tracks.items, savedAlbum));
+      // If albums have more than one page of tracks, get the rest of its tracks
+      getRestOfTracksPromises.push(getRestOfTracks(savedAlbum.album.tracks.next, tokens, savedAlbum.album.tracks.items, savedAlbum));
     } else {
-      addToDb(savedAlbum.album);
+      addToDbPromises.push(addToDb(savedAlbum.album));
     }
   }
 
   // Doc used to update User
   let doc = {
-    refreshToken: tokens.refresh,
-    albumIds: albumIds
+    'refreshToken': tokens.refresh,
+    'savedAlbums': savedAlbumsDb
   }
 
   User.updateOne(
-  	{ spotifyId: spotifyId },
-  	doc,
-  	{ upsert: true, runValidators: true },
-  	function(error, writeOpResult) {
+    { spotifyId: spotifyId },
+    doc,
+    { upsert: true, runValidators: true },
+    function (error, writeOpResult) {
       if (error) console.log(error);
-  	}
+    }
   );
 
-  // After processing all of these albums, send a response
-  Promise.all(promises).then(values => {
-    res.send('Done!');
+  Promise.all(getRestOfTracksPromises).then(results => {
+    // After getting the rest of the tracks for certain albums
+    for (let result of results) {
+      addToDbPromises.push(addToDb(result.album));
+    }
+
+    // After adding each album to app's database, get the user's library
+    Promise.all(addToDbPromises).then(values => {
+      getLibrary(spotifyId, res)
+    });
   });
 }
 
@@ -168,9 +181,7 @@ function getRestOfTracks(endpoint, tokens, tracks, savedAlbum) {
           // Replace original array with new array of tracks
           savedAlbum.album.tracks.items = tracks;
 
-          addToDb(savedAlbum.album);
-
-          resolve();
+          resolve(savedAlbum);
         }
       }
     });
@@ -178,38 +189,69 @@ function getRestOfTracks(endpoint, tokens, tracks, savedAlbum) {
 }
 
 function addToDb(savedAlbum) {
-  // Doc used to update Album
-  let doc = {};
+  return new Promise((resolve, reject) => {
+    // Doc used to update Album
+    let doc = {};
 
-  doc.id = savedAlbum.id;
-  doc.name = savedAlbum.name;
+    doc.id = savedAlbum.id;
+    doc.name = savedAlbum.name;
 
-  doc.artistNames = [];
-  for (let artist of savedAlbum.artists) {
-    doc.artistNames.push(artist.name);
-  }
+    doc.artistNames = [];
+    for (let artist of savedAlbum.artists) {
+      doc.artistNames.push(artist.name);
+    }
 
-  doc.duration_ms = 0;
-  doc.explicit = false;
-  for (let track of savedAlbum.tracks.items) {
-    doc.duration_ms += track.duration_ms;
+    doc.duration_ms = 0;
+    doc.explicit = false;
+    for (let track of savedAlbum.tracks.items) {
+      doc.duration_ms += track.duration_ms;
 
-    if (track.explicit) doc.explicit = true;
-  }
+      if (track.explicit) doc.explicit = true;
+    }
 
-  doc.releaseYear = +savedAlbum.release_date.substring(0, 4);
-  doc.publicUrl = savedAlbum.external_urls.spotify;
-  doc.images = savedAlbum.images;
-  doc.totalTracks = savedAlbum.tracks.total;
+    doc.releaseYear = +savedAlbum.release_date.substring(0, 4);
+    doc.publicUrl = savedAlbum.external_urls.spotify;
+    doc.images = savedAlbum.images;
+    doc.totalTracks = savedAlbum.tracks.total;
 
-  Album.updateOne(
-  	{ id: savedAlbum.id },
-  	doc,
-  	{ upsert: true, runValidators: true },
-  	function(error, writeOpResult) {
-      if (error) console.log(error);
-  	}
-  );
+    Album.updateOne(
+      { id: savedAlbum.id },
+      doc,
+      { upsert: true, runValidators: true },
+      function (error, writeOpResult) {
+        if (error) console.log(error);
+        resolve();
+      }
+    );
+  });
+}
+
+function getLibrary(spotifyId, res) {
+  User.findOne({ spotifyId: spotifyId }, 'savedAlbums', function (err, doc) {
+    if (doc.savedAlbums) {
+      let savedAlbums = doc.savedAlbums;
+
+      let albumIds = [];
+
+      // Create array of album IDs
+      for (let savedAlbum of savedAlbums) {
+        albumIds.push(savedAlbum.id);
+      }
+
+      // Use lean option so documents returned are plain JavaScript objects, not Mongoose Documents
+      // https://stackoverflow.com/a/18070111
+      Album.find({ id: { $in: albumIds} }).lean().exec(function (err, docs) {
+        for (let i = 0; i < savedAlbums.length; i++) {
+          let index = docs.findIndex((album) => album.id == savedAlbums[i].id);
+          docs[index]['added_at'] = savedAlbums[i].added_at;
+
+          if (i == savedAlbums.length - 1) {
+            res.send(docs);
+          }
+        }
+      });
+    }
+  });
 }
 
 module.exports = router;

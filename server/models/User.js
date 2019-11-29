@@ -13,8 +13,8 @@ const UserSchema = new Schema({
     type: String,
     required: [true, 'No refresh token']
   },
-  albumIds: {
-    type: [String],
+  savedAlbums: {
+    type: [{}],
     required: [true, 'No album IDs']
   }
 });
