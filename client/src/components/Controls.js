@@ -1,17 +1,15 @@
 import React from 'react';
 
+import Tabs from './Tabs';
+
 function Controls(props) {
   return (
     <div>
-      
-      <select
-        name="sort"
-        id="sort-mode-select"
-        value={props.selected}
-        onChange={props.onChangeSort} >
-        <option value="duration_ms">Duration</option>
-        <option value="releaseYear">Release Year</option>
-      </select>
+      <Tabs
+        tabs={[{ value: "duration_ms", text: "Duration" },
+        { value: "releaseYear", text: "Release Year" }]}
+        onClick={props.onChangeSort}
+        selected={props.selected} />
 
       <select
         name="options"
@@ -23,7 +21,6 @@ function Controls(props) {
         })}
       </select>
     </div>
-
   );
 }
 
