@@ -6,7 +6,8 @@ const router = express.Router();
 const request = require('request');
 const config = require('config');
 
-const User = require('../models/User');
+const User = require('../../models/User');
+
 router.post('/callback', function(req, res) {
   const code = req.body.code;
 

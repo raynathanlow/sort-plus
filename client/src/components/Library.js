@@ -17,7 +17,7 @@ class Library extends Component {
 
   componentDidMount() {
     const options = {
-      url: window.location.origin + '/library',
+      url: window.location.origin + '/api/library',
       json: true
     };
 

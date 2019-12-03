@@ -18,7 +18,7 @@ class Callback extends Component {
     // If there are cookies, assign with stateKey value, else, null
     const storedState = document.cookie ? getCookie(constants.STATE_KEY) : null;
 
-    if (state === null || state !== storedState ) {
+    if (state === null || state !== storedState) {
       // States do not match
     } else {
       // Delete cookie
@@ -26,17 +26,17 @@ class Callback extends Component {
 
       // Make a POST request
       const options = {
-	url: window.location.origin + '/login/callback',
-	body : {
-	  code: code
-	},
-	json: true
+        url: window.location.origin + '/api/login/callback',
+        body: {
+          code: code
+        },
+        json: true
       };
 
-      request.post(options, function(error, response, body) {
-	if (!error && response.statusCode === 200) {
-	  window.location.href = '/library';
-	}
+      request.post(options, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+          window.location.href = '/library';
+        }
       });
     }
   }
@@ -44,7 +44,7 @@ class Callback extends Component {
   render() {
     return (
       <div>
-      Callback
+        Callback
       </div>
     );
   }

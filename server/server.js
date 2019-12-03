@@ -6,8 +6,8 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const config = require('config');
 
-const authorizationRouter = require('./routes/authorizationRouter');
-const libraryRouter = require('./routes/library');
+const authorization = require('./routes/api/authorization');
+const libraryRouter = require('./routes/api/library');
 
 const app = express();
 
@@ -45,8 +45,8 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.use('/login', authorizationRouter);
-app.use('/library', libraryRouter);
+app.use('/api/login', authorization);
+app.use('/api/library', libraryRouter);
 
 const port = process.env.PORT || 3001;
 

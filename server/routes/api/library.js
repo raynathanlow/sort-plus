@@ -4,8 +4,8 @@ const router = express.Router();
 const request = require('request');
 const config = require('config');
 
-const Album = require('../models/Album');
-const User = require('../models/User');
+const Album = require('../../models/Album');
+const User = require('../../models/User');
 
 // router.get('/', function(req, res) {
 //   // If first time, go to update endpoint
