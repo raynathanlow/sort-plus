@@ -3,7 +3,7 @@ import Album from './Album';
 
 function AlbumGroup(props) {
   return <div>
-    <h1>{props.heading}</h1>
+    <h1 id={props.heading}>{props.heading}</h1>
     <ul>
       {props.albums.map((album) => {
         return <Album key={album.id}

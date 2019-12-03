@@ -7,7 +7,12 @@ import request from 'request';
 class Library extends Component {
   constructor(props) {
     super(props);
-    this.state = { albums: [], sortedAlbums: [], sortMode: 'duration_ms' };
+    this.state = {
+      albums: [],
+      sortedAlbums: [],
+      options: [],
+      sortMode: 'duration_ms'
+    };
   }
 
   componentDidMount() {
@@ -30,9 +35,12 @@ class Library extends Component {
     let currentGroup;
     let currentGroupArr = [];
     let combinedArr = [];
+    let options = [];
 
     if (sortMode === 'duration_ms') {
       currentGroup = this.toHoursAndMinutes(albums[0].duration_ms);
+
+      options.push(this.toHoursAndMinutes(albums[0].duration_ms));
 
       albums.forEach(element => {
         // If element doesn't match the currentGroup,
@@ -41,6 +49,9 @@ class Library extends Component {
           currentGroup = this.toHoursAndMinutes(element.duration_ms); // Update currentGroup
           currentGroupArr = []; // Reset array
 
+          // Add this.toHoursAndMinutes(element.duration_ms) to options state array
+          options.push(this.toHoursAndMinutes(element.duration_ms));
+
           currentGroupArr.push(element); // Add element of new group to arr
         } else {
           currentGroupArr.push(element); // Add element to arr
@@ -49,9 +60,11 @@ class Library extends Component {
 
       combinedArr.push(currentGroupArr); // Add last group
 
-      this.setState({ albums: albums, sortedAlbums: combinedArr, sortMode: sortMode });
+      this.setState({ albums: albums, sortedAlbums: combinedArr, options: options, sortMode: sortMode });
     } else if (sortMode === 'releaseYear') {
       currentGroup = albums[0].releaseYear;
+
+      options.push(albums[0].releaseYear);
 
       albums.forEach(element => {
         // If element doesn't match the currentGroup,
@@ -60,6 +73,9 @@ class Library extends Component {
           currentGroup = element.releaseYear; // Update currentGroup
           currentGroupArr = []; // Reset array
 
+          // Add element.releaseYear to options state array
+          options.push(element.releaseYear);
+
           currentGroupArr.push(element); // Add element of new group to arr
         } else {
           currentGroupArr.push(element); // Add element to arr
@@ -68,12 +84,16 @@ class Library extends Component {
 
       combinedArr.push(currentGroupArr); // Add last group
 
-      this.setState({ albums: albums, sortedAlbums: combinedArr, sortMode: sortMode });
+      this.setState({ albums: albums, sortedAlbums: combinedArr, options: options, sortMode: sortMode });
     }
   }
 
   updateMode = (e) => {
     this.organize(e.target.value, this.state.albums);
+  }
+
+  updateOption = (e) => {
+    window.location.href = '#' + e.target.value;
   }
 
   toHoursAndMinutes = (ms) => {
@@ -98,10 +118,14 @@ class Library extends Component {
   }
 
   render() {
-    console.log('render');
     return (
       <div>
-        <Controls onChange={this.updateMode} />
+        {/* pass options array to Controls */}
+        <Controls
+          selected={this.state.sortMode}
+          onChangeSort={this.updateMode}
+          options={this.state.options}
+          onChangeOption={this.updateOption} />
         {this.state.sortedAlbums.map((group) => {
           return <AlbumGroup key={this.getHeading(group)}
             heading={this.getHeading(group)}
