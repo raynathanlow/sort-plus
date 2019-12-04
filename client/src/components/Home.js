@@ -5,7 +5,7 @@ import Button from './Button';
 class Home extends Component {
   render() {
     return (
-      <Button text="Login"/>
+      <Button url={window.location.href + "login"} text="Login"/>
     );
   }
 }

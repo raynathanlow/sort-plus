@@ -1,9 +1,7 @@
 import React from 'react';
 
 function Button(props) {
-    return <button type="button">
-        {props.text}
-    </button>;
+    return <a href={props.url}>{props.text}</a>;
 }
 
 export default Button;
