@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
+import request from 'request';
+import styled from 'styled-components';
+
 import AlbumGroup from './AlbumGroup';
 import Controls from './Controls';
 
-import request from 'request';
+const LibraryDiv = styled.div`
+  background-color: #282828;
+`;
 
 class Library extends Component {
   constructor(props) {
@@ -119,19 +124,21 @@ class Library extends Component {
 
   render() {
     return (
-      <div>
+      <LibraryDiv>
         {/* pass options array to Controls */}
-        <Controls
-          selected={this.state.sortMode}
-          onChangeSort={this.updateMode}
-          options={this.state.options}
-          onChangeOption={this.updateOption} />
+
         {this.state.sortedAlbums.map((group) => {
           return <AlbumGroup key={this.getHeading(group)}
             heading={this.getHeading(group)}
             albums={group} />;
         })}
-      </div>
+
+        <Controls
+          selected={this.state.sortMode}
+          onChangeSort={this.updateMode}
+          options={this.state.options}
+          onChangeOption={this.updateOption} />
+      </LibraryDiv>
     );
   }
 }
