@@ -3,13 +3,12 @@
 import React, { Component } from 'react';
 import request from 'request';
 
-import * as constants from '../Constants.js';
-import { getCookie } from '../Utils.js';
+import * as constants from '../Constants';
+import { getCookie } from '../Utils';
 
 class Callback extends Component {
-
   componentDidMount() {
-    const query = this.props.location.search;
+    const query = document.location.search;
     const searchParams = new URLSearchParams(query);
 
     const code = searchParams.get('code') || null;
@@ -22,18 +21,18 @@ class Callback extends Component {
       // States do not match
     } else {
       // Delete cookie
-      document.cookie = constants.STATE_KEY + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie = `${constants.STATE_KEY}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 
       // Make a POST request
       const options = {
-        url: window.location.origin + '/api/login/callback',
+        url: `${window.location.origin}/api/login/callback`,
         body: {
-          code: code
+          code
         },
         json: true
       };
 
-      request.post(options, function (error, response, body) {
+      request.post(options, (error, response) => {
         if (!error && response.statusCode === 200) {
           window.location.href = '/library';
         }
@@ -42,11 +41,7 @@ class Callback extends Component {
   }
 
   render() {
-    return (
-      <div>
-        Callback
-      </div>
-    );
+    return <div>Callback</div>;
   }
 }
 

@@ -1,13 +1,13 @@
-const express = require('express');
-const session = require('express-session');
+const express = require("express");
+const session = require("express-session");
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const cookieParser = require('cookie-parser');
-const config = require('config');
+const cookieParser = require("cookie-parser");
+const config = require("config");
 
-const authorization = require('./routes/api/authorization');
-const libraryRouter = require('./routes/api/library');
+const authorization = require("./routes/api/authorization");
+const libraryRouter = require("./routes/api/library");
 
 const app = express();
 
@@ -16,37 +16,42 @@ app.use(express.json());
 app.use(cookieParser());
 
 // MongoDB Config
-const db = config.get('mongoURI');
+const db = config.get("mongoURI");
 
 // Connect to MongoDB
-mongoose.connect(db, { 
+mongoose.connect(db, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true
 });
 
-const connection = mongoose.connection;
+const { connection } = mongoose;
 
 // Bind default connection to error event (to get notification of connection errors)
-connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
+connection.on(
+  "error",
+  console.error.bind(console, "MongoDB connection error:")
+);
 
-connection.once('open', function() {
+connection.once("open", () => {
   console.log("MongoDB connected...");
 });
 
-app.use(session({
-  name: 'GozegeSession',
-  secret: 'uzPGdq3LedYXJg2pWp23YbTGCFXRgXuc',
-  resave: false, // Forces session to be saved back to the session store
-  saveUninitialized: false // Forces "uninitialized" session to be saved to the store
-}));
+app.use(
+  session({
+    name: "GozegeSession",
+    secret: "uzPGdq3LedYXJg2pWp23YbTGCFXRgXuc",
+    resave: false, // Forces session to be saved back to the session store
+    saveUninitialized: false // Forces 'uninitialized' session to be saved to the store
+  })
+);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
-app.use('/api/login', authorization);
-app.use('/api/library', libraryRouter);
+app.use("/api/login", authorization);
+app.use("/api/library", libraryRouter);
 
 const port = process.env.PORT || 3001;
 
