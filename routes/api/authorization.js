@@ -9,6 +9,8 @@ const request = require("request");
 const User = require("../../models/User");
 
 router.post("/callback", (req, res) => {
+  console.log("enter callback");
+
   const { code } = req.body;
 
   const authorization = Buffer.from(
@@ -71,8 +73,12 @@ router.post("/callback", (req, res) => {
               res.send(spotifyId);
             }
           );
+        } else {
+          console.log(error);
         }
       });
+    } else {
+      console.log(error);
     }
   });
 });
