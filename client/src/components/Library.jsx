@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
-import request from 'request';
-import styled from 'styled-components';
+import React, { Component } from "react";
+import request from "request";
+import styled from "styled-components";
 
-import AlbumGroup from './AlbumGroup';
-import Controls from './Controls';
+import AlbumGroup from "./AlbumGroup";
+import Controls from "./Controls";
 
 const LibraryDiv = styled.div`
   background-color: #282828;
@@ -32,7 +32,7 @@ class Library extends Component {
       albums: [],
       sortedAlbums: [],
       options: [],
-      sortMode: 'duration_ms'
+      sortMode: "duration_ms"
     };
   }
 
@@ -54,7 +54,7 @@ class Library extends Component {
   getHeading(group) {
     const { sortMode } = this.state;
 
-    if (sortMode === 'duration_ms') {
+    if (sortMode === "duration_ms") {
       return toHoursAndMinutes(group[0].duration_ms);
     }
     return group[0].releaseYear;
@@ -75,7 +75,7 @@ class Library extends Component {
     const combinedArr = [];
     const options = [];
 
-    if (sortMode === 'duration_ms') {
+    if (sortMode === "duration_ms") {
       currentGroup = toHoursAndMinutes(albums[0].duration_ms);
 
       options.push(toHoursAndMinutes(albums[0].duration_ms));
@@ -104,7 +104,7 @@ class Library extends Component {
         options,
         sortMode
       });
-    } else if (sortMode === 'releaseYear') {
+    } else if (sortMode === "releaseYear") {
       currentGroup = albums[0].releaseYear;
 
       options.push(albums[0].releaseYear);

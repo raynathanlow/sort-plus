@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
-import { generateRandomString } from '../Utils';
-import * as constants from '../Constants';
+import { generateRandomString } from "../Utils";
+import * as constants from "../Constants";
 
 class Login extends Component {
   componentDidMount() {

@@ -1,5 +1,6 @@
 const express = require("express");
 const session = require("express-session");
+const path = require("path");
 
 const mongoose = require("mongoose");
 
@@ -46,12 +47,14 @@ app.use(
   })
 );
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
 app.use("/api/login", authorization);
 app.use("/api/library", libraryRouter);
+
+app.use(express.static(path.join(__dirname, "client/build")));
+
+app.get("/*", function(req, res) {
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
 
 const port = process.env.PORT || 3001;
 

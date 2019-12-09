@@ -159,8 +159,6 @@ function getLibrary(spotifyId, res) {
 }
 
 function processAlbums(savedAlbums, tokens, spotifyId, res) {
-  console.log("processAlbums");
-
   const getRestOfTracksPromises = [];
   const addToDbPromises = [];
   const savedAlbumsDb = []; // Saved album objects to add to user's document in database
@@ -300,22 +298,22 @@ function getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res) {
 // Should endpoint be /update?
 router.get("/", (req, res) => {
   const tokens = {
-    // Expired
+    // Expiredf
     // access: `BQBGYpfXGGIu72VVPdTNyRqmz3ViLznkfvSmyA-VuH4FgIrLkuNByzh73GoRRh6yMK0xo8Q1UqNDwGffq21G6oK6Ih-uYxSZHJ5P2nN1Zl30jJ_PJigByoocoVcM3Do3BtYctRiC9MwQJsnMhXMq7vrEmV_3KLLWQdiFcKtkjivvPzCOzT7Dwe7Ba8ts`,
     access: req.session.accessToken,
     refresh: req.session.refreshToken
   };
 
   // Attempt to get current user's saved albums
-  // getSavedAlbums(
-  //   "https://api.spotify.com/v1/me/albums?limit=50",
-  //   tokens,
-  //   [],
-  //   req.session.user,
-  //   res
-  // );
+  getSavedAlbums(
+    "https://api.spotify.com/v1/me/albums?limit=50",
+    tokens,
+    [],
+    req.session.user,
+    res
+  );
 
-  getLibrary("stradition", res);
+  // getLibrary("stradition", res);
 });
 
 module.exports = router;
