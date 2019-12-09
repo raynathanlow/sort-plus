@@ -1,7 +1,6 @@
 const express = require("express");
 
 const request = require("request");
-const config = require("config");
 
 const Album = require("../../models/Album");
 const User = require("../../models/User");
@@ -18,7 +17,7 @@ const router = express.Router();
 // Similar to getSavedAlbums, but for tracks
 function getRestOfTracks(endpoint, tokens, tracks, savedAlbum) {
   const authorization = Buffer.from(
-    `${config.get("clientId")}:${config.get("clientSecret")}`
+    `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
   ).toString("base64");
 
   return new Promise(resolve => {
@@ -243,7 +242,7 @@ function processAlbums(savedAlbums, tokens, spotifyId, res) {
 
 function getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res) {
   const authorization = Buffer.from(
-    `${config.get("clientId")}:${config.get("clientSecret")}`
+    `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
   ).toString("base64");
 
   const options = {

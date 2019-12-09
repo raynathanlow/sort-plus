@@ -5,7 +5,6 @@ const express = require("express");
 const router = express.Router();
 
 const request = require("request");
-const config = require("config");
 
 const User = require("../../models/User");
 
@@ -13,14 +12,14 @@ router.post("/callback", (req, res) => {
   const { code } = req.body;
 
   const authorization = Buffer.from(
-    `${config.get("clientId")}:${config.get("clientSecret")}`
+    `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
   ).toString("base64");
 
   const tokenOptions = {
     url: "https://accounts.spotify.com/api/token",
     form: {
       code,
-      redirect_uri: config.get("redirectUri"),
+      redirect_uri: process.env.REDIRECT_URI,
       grant_type: "authorization_code"
     },
     headers: {

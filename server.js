@@ -5,7 +5,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 
 const cookieParser = require("cookie-parser");
-const config = require("config");
+require("dotenv").config();
 
 const authorization = require("./routes/api/authorization");
 const libraryRouter = require("./routes/api/library");
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // MongoDB Config
-const db = config.get("mongoURI");
+const db = process.env.MONGO_URI;
 
 // Connect to MongoDB
 mongoose.connect(db, {
@@ -56,7 +56,7 @@ app.get("/*", function(req, res) {
   res.sendFile(path.join(__dirname, "client/build", "index.html"));
 });
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
