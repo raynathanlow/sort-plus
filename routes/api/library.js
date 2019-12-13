@@ -304,15 +304,15 @@ router.get("/", (req, res) => {
   };
 
   // Attempt to get current user's saved albums
-  getSavedAlbums(
-    "https://api.spotify.com/v1/me/albums?limit=50",
-    tokens,
-    [],
-    req.session.user,
-    res
-  );
+  // getSavedAlbums(
+  //   "https://api.spotify.com/v1/me/albums?limit=50",
+  //   tokens,
+  //   [],
+  //   req.session.user,
+  //   res
+  // );
 
-  // getLibrary("stradition", res);
+  getLibrary("stradition", res);
 });
 
 module.exports = router;

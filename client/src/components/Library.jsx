@@ -6,7 +6,7 @@ import AlbumGroup from "./AlbumGroup";
 import Controls from "./Controls";
 
 const LibraryDiv = styled.div`
-  background-color: #282828;
+  background-color: #111114;
 `;
 
 function updateOption(e) {

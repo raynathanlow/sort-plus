@@ -1,18 +1,23 @@
-import React from 'react';
-import styled from 'styled-components';
-import PropTypes from 'prop-types';
+import React from "react";
+import styled from "styled-components";
+import PropTypes from "prop-types";
 
 const TabsDiv = styled.div`
   display: flex;
   flex-direction: column;
-  flex-grow: 0.6;
+  width: 100%;
+
+  @media (min-width: 400px) {
+    flex-direction: row;
+  }
 `;
 
 const Button = styled.button`
+  width: 100%;
   padding: 1em;
   color: white;
-  background-color: #282828;
-  // outline: none;
+  background-color: #111114;
+  outline: none;
   border: none;
   cursor: pointer;
   cursor: hand;

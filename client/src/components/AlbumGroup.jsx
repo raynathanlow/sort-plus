@@ -1,8 +1,8 @@
-import React from 'react';
-import styled from 'styled-components';
-import PropTypes from 'prop-types';
+import React from "react";
+import styled from "styled-components";
+import PropTypes from "prop-types";
 
-import Album from './Album';
+import Album from "./Album";
 
 const AlbumGroupDiv = styled.div`
   color: white;
@@ -11,11 +11,21 @@ const AlbumGroupDiv = styled.div`
 const AlbumH1 = styled.h1`
   text-align: center;
   margin: 0;
+  font-size: 1.25em;
+
+  @media (min-width: 500px) {
+    font-size: 1.5em;
+  }
 `;
 
 const AlbumGroupUl = styled.ul`
   list-style-type: none;
-  padding: 0 1em;
+  padding: 0 0.5em;
+
+  @media (min-width: 500px) {
+    display: flex;
+    flex-wrap: wrap;
+  }
 `;
 
 function generateArtistStr(artistNames) {
@@ -25,7 +35,7 @@ function generateArtistStr(artistNames) {
     result.push(artist);
   });
 
-  return result.join(', ');
+  return result.join(", ");
 }
 
 function AlbumGroup(props) {

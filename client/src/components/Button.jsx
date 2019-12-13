@@ -1,9 +1,9 @@
-import React from 'react';
-import styled from 'styled-components';
-import PropTypes from 'prop-types';
+import React from "react";
+import styled from "styled-components";
+import PropTypes from "prop-types";
 
 const ButtonA = styled.a`
-  padding: 1em 2em;
+  padding: 0.5em 1em;
   background-color: #1db954;
   border-radius: 2em;
   text-decoration: none;
