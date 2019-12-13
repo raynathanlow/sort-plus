@@ -61,7 +61,8 @@ const OptionsDiv = styled.div`
   }
 
   @media ((min-width: ${tabs}px) and (min-height: ${tabs}px)) {
-     flex: 0 1 40%;
+    flex: 0 1 40%;
+    margin: 0.5em; 
   }
 
   @media(min-width: 400px) {
@@ -76,7 +77,7 @@ const Select = styled.select`
 
   @media (min-width: ${tabs}px) {
     padding: 0.5em;
-    margin: 0;
+    margin-top: 0em;
   }
 `;
 
