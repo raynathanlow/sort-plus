@@ -71,6 +71,13 @@ const OptionsDiv = styled.div`
 
 const Select = styled.select`
   width: 100%;
+  padding: 0.25em;
+  margin-top: 0.5em;
+
+  @media (min-width: ${tabs}px) {
+    padding: 0.5em;
+    margin: 0;
+  }
 `;
 
 function Controls(props) {
