@@ -7,312 +7,410 @@ const User = require("../../models/User");
 
 const router = express.Router();
 
-// router.get('/', function(req, res) {
-//   // If first time, go to update endpoint
-//   // If not first time, Get data from database
-//   // Then display the library
-//   res.send('Library');
-// });
-
-// Similar to getSavedAlbums, but for tracks
-function getRestOfTracks(endpoint, tokens, tracks, savedAlbum) {
-  const authorization = Buffer.from(
-    `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
-  ).toString("base64");
-
-  return new Promise(resolve => {
-    const options = {
-      url: endpoint,
-      headers: {
-        Authorization: `Bearer ${tokens.access}`
-      },
-      json: true
-    };
-
-    request.get(options, (error, response, body) => {
-      // Refresh access token if it has expired
-      if (body.error && body.error.message === "The access token expired") {
-        const postOptions = {
-          url: "https://accounts.spotify.com/api/token",
-          headers: {
-            Authorization: `Basic ${authorization}`
-          },
-          form: {
-            grant_type: "refresh_token",
-            refresh_token: tokens.refresh
-          },
-          json: true
-        };
-
-        request.post(postOptions, (postError, postResponse, postBody) => {
-          if (!postError && response.statusCode === 200) {
-            // Is updating the accessToken key of session object necessary here?
-            const newTokens = {
-              access: postBody.access_token,
-              refresh: tokens.refresh
-            };
-
-            // tokens.access = postBody.access_token;
-
-            getRestOfTracks(endpoint, newTokens, tracks, savedAlbum);
-          }
-        });
-      }
-
-      if (!error && response.statusCode === 200) {
-        // Concatenate tracks
-        const combinedTracks = tracks.concat(body.items);
-
-        // If there is another page, call itself again
-        if (body.next) {
-          getRestOfTracks(body.next, tokens, combinedTracks, savedAlbum);
-        } else {
-          // If there are no more pages,
-          // Replace original array with new array of tracks
-          const albumToReturn = savedAlbum;
-
-          albumToReturn.album.tracks.items = tracks;
-
-          resolve(albumToReturn);
-        }
-      }
-    });
-  });
-}
-
-function addToDb(savedAlbum) {
-  return new Promise(resolve => {
-    // Doc used to update Album
-    const doc = {};
-
-    doc.id = savedAlbum.id;
-    doc.name = savedAlbum.name;
-
-    doc.artistNames = [];
-
-    savedAlbum.artists.forEach(element => {
-      doc.artistNames.push(element.name);
-    });
-
-    doc.duration_ms = 0;
-    doc.explicit = false;
-
-    savedAlbum.tracks.items.forEach(element => {
-      doc.duration_ms += element.duration_ms;
-
-      if (element.explicit) doc.explicit = true;
-    });
-
-    doc.releaseYear = +savedAlbum.release_date.substring(0, 4);
-    doc.publicUrl = savedAlbum.external_urls.spotify;
-    doc.images = savedAlbum.images;
-    doc.totalTracks = savedAlbum.tracks.total;
-
-    Album.updateOne(
-      { id: savedAlbum.id },
-      doc,
-      { upsert: true, runValidators: true },
-      error => {
-        if (error) console.log(error);
-        resolve();
-      }
-    );
-  });
-}
-
-function getLibrary(spotifyId, res) {
-  User.findOne({ spotifyId }, "savedAlbums", (userErr, userDoc) => {
-    if (userDoc.savedAlbums) {
-      const { savedAlbums } = userDoc;
-
-      const albumIds = [];
-
-      // Create array of album IDs
-      // for (let savedAlbum of savedAlbums) {
-      //   albumIds.push(savedAlbum.id);
-      // }
-
-      savedAlbums.forEach(element => {
-        albumIds.push(element.id);
-      });
-
-      // Use lean option so documents returned are plain JavaScript objects, not Mongoose Documents
-      // https://stackoverflow.com/a/18070111
-      Album.find({ id: { $in: albumIds } })
-        .lean()
-        .exec((err, docs) => {
-          const newDocs = docs;
-          for (let i = 0; i < savedAlbums.length; i += 1) {
-            const index = docs.findIndex(
-              album => album.id === savedAlbums[i].id
-            );
-            newDocs[index].added_at = savedAlbums[i].added_at;
-
-            if (i === savedAlbums.length - 1) {
-              res.send(newDocs);
-            }
-          }
-        });
+function getAccessToken(req) {
+  return new Promise((resolve, reject) => {
+    // Return accessToken from session object if it hasn't expired yet
+    if (Date.now() < req.session.accessExpiration) {
+      resolve(req.session.accessToken);
     }
-  });
-}
 
-function processAlbums(savedAlbums, tokens, spotifyId, res) {
-  const getRestOfTracksPromises = [];
-  const addToDbPromises = [];
-  const savedAlbumsDb = []; // Saved album objects to add to user's document in database
+    const authorization = Buffer.from(
+      `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
+    ).toString("base64");
 
-  // for (let savedAlbum of savedAlbums) {
-  //   let album = {
-  //     id: savedAlbum.album.id,
-  //     added_at: savedAlbum.added_at
-  //   };
-
-  //   savedAlbumsDb.push(album);
-
-  //   if (savedAlbum.album.tracks.next !== null) {
-  //     // If albums have more than one page of tracks, get the rest of its tracks
-  //     getRestOfTracksPromises.push(
-  //       getRestOfTracks(
-  //         savedAlbum.album.tracks.next,
-  //         tokens,
-  //         savedAlbum.album.tracks.items,
-  //         savedAlbum
-  //       )
-  //     );
-  //   } else {
-  //     addToDbPromises.push(addToDb(savedAlbum.album));
-  //   }
-  // }
-
-  savedAlbums.forEach(element => {
-    const album = {
-      id: element.album.id,
-      added_at: element.added_at
-    };
-
-    savedAlbumsDb.push(album);
-
-    if (element.album.tracks.next !== null) {
-      // If albums have more than one page of tracks, get the rest of its tracks
-      getRestOfTracksPromises.push(
-        getRestOfTracks(
-          element.album.tracks.next,
-          tokens,
-          element.album.tracks.items,
-          element
-        )
-      );
-    } else {
-      addToDbPromises.push(addToDb(element.album));
-    }
-  });
-
-  // Doc used to update User
-  const doc = {
-    refreshToken: tokens.refresh,
-    savedAlbums: savedAlbumsDb
-  };
-
-  User.updateOne(
-    { spotifyId },
-    doc,
-    { upsert: true, runValidators: true },
-    error => {
-      if (error) console.log(error);
-    }
-  );
-
-  Promise.all(getRestOfTracksPromises).then(results => {
-    // After getting the rest of the tracks for certain albums
-    // for (let result of results) {
-    //   addToDbPromises.push(addToDb(result.album));
-    // }
-
-    results.forEach(element => {
-      addToDbPromises.push(addToDb(element.album));
-    });
-
-    // After adding each album to app's database, get the user's library
-    Promise.all(addToDbPromises).then(() => {
-      getLibrary(spotifyId, res);
-    });
-  });
-}
-
-function getSavedAlbums(endpoint, tokens, savedAlbums, spotifyId, res) {
-  const authorization = Buffer.from(
-    `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
-  ).toString("base64");
-
-  const options = {
-    url: endpoint,
-    headers: {
-      Authorization: `Bearer ${tokens.access}`
-    },
-    json: true
-  };
-
-  request.get(options, (error, response, body) => {
-    // Refresh access token if it has expired
-    if (body.error && body.error.message === "The access token expired") {
-      const postOption = {
+    request.post(
+      {
         url: "https://accounts.spotify.com/api/token",
         headers: {
           Authorization: `Basic ${authorization}`
         },
         form: {
           grant_type: "refresh_token",
-          refresh_token: tokens.refresh
+          refresh_token: req.session.refreshToken
         },
         json: true
-      };
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          // Update session object
+          req.session.accessToken = body.access_token;
+          // Set expiration as 50 minutes from now to give buffer for any requests sent near expiration
+          req.session.accessExpiration = Date.now() + 300000;
 
-      request.post(postOption, (postError, postResponse, postBody) => {
-        if (!postError && postResponse.statusCode === 200) {
-          // Is updating the accessToken key of session object necessary here?
-          const newTokens = tokens;
-          newTokens.access = postBody.access_token;
-
-          getSavedAlbums(endpoint, newTokens, savedAlbums, spotifyId, res);
+          // Return access token
+          resolve(body.access_token);
+        } else {
+          reject();
         }
-      });
-    }
-
-    if (!error && response.statusCode === 200) {
-      // Concatenate saved albums
-      const newSavedAlbums = savedAlbums.concat(body.items);
-
-      // If there is another page, call itself again
-      if (body.next) {
-        getSavedAlbums(body.next, tokens, newSavedAlbums, spotifyId, res);
-      } else {
-        // If there are no more pages, process the albums
-        processAlbums(newSavedAlbums, tokens, spotifyId, res);
       }
-    }
+    );
   });
 }
 
-// Should endpoint be /update?
+// Compile array of endpoints based on total possible items
+// Function used to enable asynchronously requesting information
+function getAllEndpoints(accessToken, baseUrl) {
+  return new Promise((resolve, reject) => {
+    const limit = 50;
+    let offset = 0;
+
+    request.get(
+      {
+        url: `${baseUrl}?=offset=${offset}&limit=${limit}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+        json: true
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          const { total } = body;
+          const endpointCount = Math.ceil(total / limit);
+          const endpoints = [];
+
+          for (let page = 0; page < endpointCount; page += 1) {
+            endpoints.push(`${baseUrl}?offset=${offset}&limit=${limit}`);
+
+            offset += limit;
+          }
+
+          resolve(endpoints);
+        }
+        reject();
+      }
+    );
+  });
+}
+
+function sortAlbums(albums, sortMode) {
+  // Sort in ascending order based on sortMode
+  albums.sort((a, b) => a[sortMode] - b[sortMode]);
+
+  let key = "prettyDuration";
+
+  if (sortMode === "releaseYear") {
+    key = "releaseYear";
+  }
+
+  // Each group of albums will be a key in the object sorted
+  const sorted = {};
+
+  let currentGroup = albums[0][key];
+  let arr = [];
+
+  albums.forEach(album => {
+    // If album doesn't match the currentGroup,
+    if (currentGroup !== album[key]) {
+      sorted[currentGroup] = arr; // Add the currentGroup to the sorted object
+      currentGroup = album[key]; // Update currentGroup
+      arr = []; // Reset array
+
+      arr.push(album.id); // Add album of new group to arr
+    } else {
+      arr.push(album.id); // Add element to arr
+    }
+  });
+
+  sorted[currentGroup] = arr; // Add last group to the sorted object
+
+  return sorted;
+}
+
+function addSortedAlbumsToDb(albums, spotifyId) {
+  return new Promise((resolve, reject) => {
+    const doc = {
+      sortedByDuration: sortAlbums(albums, "durationMs"),
+      sortedByReleaseYear: sortAlbums(albums, "releaseYear")
+    };
+
+    User.updateOne({ spotifyId }, doc, { upsert: true }, error => {
+      if (error) console.log(error);
+      resolve();
+    });
+  });
+}
+
+// Convert milliseconds to hours and minutes
+function toHoursAndMinutes(ms) {
+  let minutes = ms / 1000 / 60;
+  const hours = Math.trunc(minutes / 60);
+  minutes = Math.trunc(minutes - hours * 60);
+
+  // Show hours and minutes, if both are not 0
+  if (hours && minutes) {
+    return `${hours.toString()} h ${minutes.toString()} m`;
+  }
+
+  // Only show hours, if there are 0 minutes
+  if (hours && !minutes) {
+    return `${hours.toString()} h`;
+  }
+
+  // Only show minutes, the rest of the cases
+  return `${minutes.toString()} m`;
+}
+
+// Function that adds saved albums to database
+function addToDb(album) {
+  return new Promise((resolve, reject) => {
+    // Doc used to update Album
+    const doc = {};
+
+    doc.id = album.id;
+    doc.name = album.name;
+
+    doc.artistNames = [];
+
+    // Only keep artist's name
+    album.artists.forEach(artist => {
+      doc.artistNames.push(artist.name);
+    });
+
+    doc.durationMs = 0;
+    doc.explicit = false;
+
+    // If album object has durationMs key, this means that it was processed further to calculate
+    // the album's duration. There is a limit of 50 tracks provided in the album object
+    if (!album.durationMs) {
+      // Album doesn't have durationMs key, so album's duration can be calculated here
+      album.tracks.items.forEach(track => {
+        doc.durationMs += track.duration_ms;
+        if (track.explicit) doc.explicit = true;
+      });
+      doc.prettyDuration = toHoursAndMinutes(doc.durationMs);
+    } else {
+      // Album does have durationMs key, so use that value and the other values added while
+      // it was processed further
+      doc.durationMs = album.durationMs;
+      doc.prettyDuration = album.prettyDuration;
+      doc.explicit = album.explicit;
+    }
+
+    doc.releaseYear = +album.release_date.substring(0, 4);
+    doc.publicUrl = album.external_urls.spotify;
+    doc.images = album.images;
+    doc.totalTracks = album.tracks.total;
+
+    Album.updateOne({ id: album.id }, doc, { upsert: true }, error => {
+      if (error) reject();
+      resolve(doc);
+    });
+  });
+}
+
+// Function used to process the albums that exceeded the 50 track limit
+function processOverLimit(album, accessToken) {
+  return new Promise((resolve, reject) => {
+    const albumUrl = album.tracks.next;
+    const index = albumUrl.indexOf("?");
+    const baseUrl = albumUrl.slice(0, index);
+
+    // Get the endpoints for the tracks
+    getAllEndpoints(accessToken, baseUrl).then(endpoints => {
+      const tracks = [];
+      let completed = 0;
+
+      endpoints.forEach(endpoint => {
+        const options = {
+          url: endpoint,
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+          json: true
+        };
+
+        // Get the data from those endpoints
+        request.get(options, (error, response, body) => {
+          if (!error && response.statusCode === 200) {
+            tracks.push(body.items);
+
+            // Once all of the data is received, calculate the album's duration and explicit
+            if (completed === endpoints.length - 1) {
+              let durationMs = 0;
+              let explicit = false;
+              tracks.flat().forEach(track => {
+                durationMs += track.durationMs;
+
+                if (track.explicit) explicit = true;
+              });
+
+              const modifiedAlbum = album;
+
+              modifiedAlbum.durationMs = durationMs;
+              modifiedAlbum.prettyDuration = toHoursAndMinutes(durationMs);
+              modifiedAlbum.explicit = explicit;
+
+              addToDb(modifiedAlbum).then(processedAlbum =>
+                resolve(processedAlbum)
+              );
+            }
+
+            completed += 1;
+          } else {
+            reject();
+          }
+        });
+      });
+    });
+  });
+}
+
+// Go through all of the albums to see whether they can be added to database
+// right away, or it requires more processing first
+function processAlbums(albums, accessToken, spotifyId) {
+  return new Promise((resolve, reject) => {
+    const promises = [];
+
+    albums.forEach(album => {
+      if (album.album.tracks.next === null) {
+        promises.push(addToDb(album.album));
+      } else {
+        promises.push(processOverLimit(album.album, accessToken));
+      }
+    });
+
+    Promise.all(promises).then(processedAlbums =>
+      addSortedAlbumsToDb(processedAlbums, spotifyId).then(resolve())
+    );
+  });
+}
+
+// Get all albums asynchronously
+function getAllAlbums(accessToken) {
+  return new Promise((resolve, reject) => {
+    getAllEndpoints(accessToken, "https://api.spotify.com/v1/me/albums").then(
+      endpoints => {
+        const albums = [];
+        let completed = 0;
+
+        endpoints.forEach(endpoint => {
+          const options = {
+            url: endpoint,
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            },
+            json: true
+          };
+
+          request.get(options, (error, response, body) => {
+            if (!error && response.statusCode === 200) {
+              albums.push(body.items);
+
+              if (completed === endpoints.length - 1) {
+                resolve(albums.flat());
+              }
+
+              completed += 1;
+            } else {
+              reject();
+            }
+          });
+        });
+      }
+    );
+  });
+}
+
+function updateLibrary(accessToken, spotifyId) {
+  return new Promise((resolve, reject) => {
+    getAllAlbums(accessToken).then(albums => {
+      processAlbums(albums, accessToken, spotifyId).then(
+        resolve("Library updated!")
+      );
+    });
+  });
+}
+
 router.get("/", (req, res) => {
-  const tokens = {
-    // Expiredf
-    // access: `BQBGYpfXGGIu72VVPdTNyRqmz3ViLznkfvSmyA-VuH4FgIrLkuNByzh73GoRRh6yMK0xo8Q1UqNDwGffq21G6oK6Ih-uYxSZHJ5P2nN1Zl30jJ_PJigByoocoVcM3Do3BtYctRiC9MwQJsnMhXMq7vrEmV_3KLLWQdiFcKtkjivvPzCOzT7Dwe7Ba8ts`,
-    access: req.session.accessToken,
-    refresh: req.session.refreshToken
-  };
+  // Send array of album IDs based on input/default
+  let arrayToFind = "sortedByDuration";
 
-  // Attempt to get current user's saved albums
-  getSavedAlbums(
-    "https://api.spotify.com/v1/me/albums?limit=50",
-    tokens,
-    [],
-    req.session.user,
-    res
-  );
+  if (req.query.sortMode === "releaseYear") arrayToFind = "sortedByReleaseYear";
 
-  // getLibrary("stradition", res);
+  User.findOne({ spotifyId: req.session.user }, arrayToFind)
+    .lean()
+    .then(user => {
+      if (req.query.option in user[arrayToFind]) {
+        res.send(user[arrayToFind][req.query.option]);
+      } else {
+        res.send(user[arrayToFind][0]);
+      }
+    })
+    .catch(error => res.send(error));
+});
+
+// Endpoint used to get initial values to render list of albums and controls
+router.get("/initialize", (req, res) => {
+  const arrayToFind = "sortedByDuration";
+
+  User.findOne(
+    { spotifyId: req.session.user },
+    "sortedByDuration sortedByReleaseYear"
+  )
+    .lean()
+    .then(user => {
+      const response = {
+        albumIds: user[arrayToFind]["1 m"],
+        options: {
+          duration: Object.keys(user.sortedByDuration),
+          releaseYear: Object.keys(user.sortedByReleaseYear)
+        }
+      };
+      res.send(response);
+    })
+    .catch(error => res.send(error));
+});
+
+router.get("/options", (req, res) => {
+  User.findOne(
+    { spotifyId: req.session.user },
+    "sortedByDuration sortedByReleaseYear"
+  )
+    .lean()
+    .then(user => {
+      const response = {
+        options: {
+          duration: Object.keys(user.sortedByDuration),
+          releaseYear: Object.keys(user.sortedByReleaseYear)
+        }
+      };
+      res.send(response);
+    })
+    .catch(error => res.send(error));
+});
+
+router.get("/update", (req, res) => {
+  getAccessToken(req).then(accessToken => {
+    updateLibrary(accessToken, req.session.user).then(() => {
+      User.findOne(
+        { spotifyId: req.session.user },
+        "sortedByDuration sortedByReleaseYear"
+      )
+        .lean()
+        .then(user => {
+          const response = {
+            albumIds: user.sortedByDuration["3 m"],
+            options: {
+              duration: Object.keys(user.sortedByDuration),
+              releaseYear: Object.keys(user.sortedByReleaseYear)
+            }
+          };
+          res.send(response);
+        })
+        .catch(error => res.send(error));
+    });
+  });
+});
+
+router.get("/album", (req, res) => {
+  getAccessToken(req).then(accessToken => {
+    updateLibrary(accessToken, req.session.user).then(() => {
+      Album.findOne({ id: req.query.albumId })
+        .lean()
+        .then(album => res.send(album))
+        .catch(error => res.send(error));
+    });
+  });
 });
 
 module.exports = router;

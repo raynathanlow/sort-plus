@@ -1,22 +1,27 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const mongoose = require("mongoose");
+
+const { Schema } = mongoose;
 
 const UserSchema = new Schema({
   spotifyId: {
     type: String,
-    required: [true, 'No Spotify ID']
+    required: [true, "No Spotify ID"]
   },
   display_name: {
-    type: String,
+    type: String
   },
   refreshToken: {
     type: String,
-    required: [true, 'No refresh token']
+    required: [true, "No refresh token"]
   },
-  savedAlbums: {
-    type: [{}],
-    required: [true, 'No album IDs']
+  sortedByDuration: {
+    type: {},
+    required: [true, "No albums sorted by duration"]
+  },
+  sortedByReleaseYear: {
+    type: {},
+    required: [true, "No albums sorted by release year"]
   }
 });
 
-module.exports = mongoose.model('User', UserSchema, 'users');
+module.exports = mongoose.model("User", UserSchema, "users");

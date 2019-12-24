@@ -89,7 +89,7 @@ function Controls(props) {
       <TabsDiv>
         <Tabs
           tabs={[
-            { value: "duration_ms", text: "Duration" },
+            { value: "duration", text: "Duration" },
             { value: "releaseYear", text: "Release Year" }
           ]}
           onClick={onChangeSort}
@@ -99,7 +99,7 @@ function Controls(props) {
 
       <SortDiv>
         <Select name="options" id="options-select" onChange={onChangeSort}>
-          <option key="duration_ms" value="duration_ms">
+          <option key="duration" value="duration">
             Duration
           </option>
           <option key="releaseYear" value="releaseYear">

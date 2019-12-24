@@ -2,161 +2,162 @@ import React, { Component } from "react";
 import request from "request";
 import styled from "styled-components";
 
-import AlbumGroup from "./AlbumGroup";
+import Album from "./Album";
 import Controls from "./Controls";
 
 const LibraryDiv = styled.div`
   background-color: #111114;
 `;
 
-function updateOption(e) {
-  window.location.href = `#${e.target.value}`;
-}
+const LibraryH1 = styled.h1`
+  text-align: center;
+  color: white;
+  margin: 0;
+  margin-bottom: 1em;
+  font-size: 1.25em;
 
-function toHoursAndMinutes(ms) {
-  let minutes = ms / 1000 / 60;
-  const hours = Math.trunc(minutes / 60);
-  minutes = Math.trunc(minutes - hours * 60);
-
-  // Only show hours, if it is not 0
-  if (hours) {
-    return `${hours.toString()} h ${minutes.toString()} m`;
+  @media (min-width: 500px) {
+    font-size: 1.5em;
   }
-  return `${minutes.toString()} m`;
-}
+`;
 
 class Library extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      albums: [],
-      sortedAlbums: [],
-      options: [],
-      sortMode: "duration_ms"
+      sortMode: "duration",
+      selectedOption: "1m",
+      albumIds: [],
+      options: {
+        duration: [],
+        releaseYear: []
+      }
     };
   }
 
   componentDidMount() {
-    const { sortMode } = this.state;
+    // console.log("componentDidMount");
 
-    const options = {
-      url: `${window.location.origin}/api/library`,
-      json: true
-    };
+    // Get query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sortModeParam = urlParams.get("sortMode");
+    const optionParam = urlParams.get("option");
 
-    request.get(options, (error, response, body) => {
-      if (!error && response.statusCode === 200) {
-        this.organize(sortMode, body);
+    // Initialize with default settings first
+    request.get(
+      {
+        url: `${window.location.origin}/api/library/initialize?sortMode=${sortModeParam}&option=${optionParam}`,
+        json: true
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          // TODO: Don't set state if array is empty
+          this.setState({
+            albumIds: body.albumIds,
+            options: body.options
+          });
+        }
       }
-    });
-  }
+    );
 
-  getHeading(group) {
-    const { sortMode } = this.state;
-
-    if (sortMode === "duration_ms") {
-      return toHoursAndMinutes(group[0].duration_ms);
-    }
-    return group[0].releaseYear;
+    // Update library asynchronously, which will re-render, if necessary
+    // request.get(
+    //   {
+    //     url: `${window.location.origin}/api/library/update`,
+    //     json: true
+    //   },
+    //   (error, response, body) => {
+    //     if (!error && response.statusCode === 200) {
+    //       // TODO: Check if there is difference between current state and body before setting state
+    //       this.setState({
+    //         albumIds: body.albumIds,
+    //         options: body.options
+    //       });
+    //     }
+    //   }
+    // );
   }
 
   updateMode = e => {
-    const { albums } = this.state;
+    const { sortMode, options } = this.state;
 
-    this.organize(e.target.value, albums);
+    // When sortMode has changed (current sortMode and e.target.value are not the same
+    if (sortMode !== e.target.value) {
+      const firstOption = options[e.target.value][0];
+
+      window.history.pushState(
+        {
+          sortMode: e.target.value,
+          option: firstOption
+        },
+        "",
+        `?sortMode=${e.target.value}&option=${firstOption}`
+      );
+
+      this.setState({
+        sortMode: e.target.value
+      });
+
+      request.get(
+        {
+          url: `${window.location.origin}/api/library?sortMode=${e.target.value}&option=${firstOption}`,
+          json: true
+        },
+        (error, response, body) => {
+          if (!error && response.statusCode === 200) {
+            this.setState({
+              albumIds: body
+            });
+          }
+        }
+      );
+    }
   };
 
-  // Return an array of arrays which is divided by similar data
-  organize(sortMode, albums) {
-    albums.sort((a, b) => a[sortMode] - b[sortMode]);
+  updateOption = e => {
+    const { sortMode } = this.state;
 
-    let currentGroup;
-    let currentGroupArr = [];
-    const combinedArr = [];
-    const options = [];
+    const selectedOption = e.target.value;
 
-    if (sortMode === "duration_ms") {
-      currentGroup = toHoursAndMinutes(albums[0].duration_ms);
+    window.history.pushState(
+      {
+        sortMode,
+        option: selectedOption
+      },
+      "",
+      `?sortMode=${sortMode}&option=${selectedOption}`
+    );
 
-      options.push(toHoursAndMinutes(albums[0].duration_ms));
-
-      albums.forEach(element => {
-        // If element doesn't match the currentGroup,
-        if (currentGroup !== toHoursAndMinutes(element.duration_ms)) {
-          combinedArr.push(currentGroupArr); // Add the currentGroup to the combined array
-          currentGroup = toHoursAndMinutes(element.duration_ms); // Update currentGroup
-          currentGroupArr = []; // Reset array
-
-          // Add toHoursAndMinutes(element.duration_ms) to options state array
-          options.push(toHoursAndMinutes(element.duration_ms));
-
-          currentGroupArr.push(element); // Add element of new group to arr
-        } else {
-          currentGroupArr.push(element); // Add element to arr
+    request.get(
+      {
+        url: `${window.location.origin}/api/library?sortMode=${sortMode}&option=${selectedOption}`,
+        json: true
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          this.setState({
+            albumIds: body,
+            selectedOption
+          });
         }
-      });
-
-      combinedArr.push(currentGroupArr); // Add last group
-
-      this.setState({
-        albums,
-        sortedAlbums: combinedArr,
-        options,
-        sortMode
-      });
-    } else if (sortMode === "releaseYear") {
-      currentGroup = albums[0].releaseYear;
-
-      options.push(albums[0].releaseYear);
-
-      albums.forEach(element => {
-        // If element doesn't match the currentGroup,
-        if (currentGroup !== element.releaseYear) {
-          combinedArr.push(currentGroupArr); // Add the currentGroup to the combined array
-          currentGroup = element.releaseYear; // Update currentGroup
-          currentGroupArr = []; // Reset array
-
-          // Add element.releaseYear to options state array
-          options.push(element.releaseYear);
-
-          currentGroupArr.push(element); // Add element of new group to arr
-        } else {
-          currentGroupArr.push(element); // Add element to arr
-        }
-      });
-
-      combinedArr.push(currentGroupArr); // Add last group
-
-      this.setState({
-        albums,
-        sortedAlbums: combinedArr,
-        options,
-        sortMode
-      });
-    }
-  }
+      }
+    );
+  };
 
   render() {
-    const { sortedAlbums, sortMode, options } = this.state;
+    const { sortMode, albumIds, options, selectedOption } = this.state;
 
     return (
       <LibraryDiv>
-        {/* pass options array to Controls */}
-
-        {sortedAlbums.map(group => {
-          return (
-            <AlbumGroup
-              key={this.getHeading(group)}
-              heading={this.getHeading(group)}
-              albums={group}
-            />
-          );
+        <LibraryH1>{selectedOption}</LibraryH1>
+        {albumIds.map(albumId => {
+          return <Album key={albumId} albumId={albumId} />;
         })}
         <Controls
           selected={sortMode}
           onChangeSort={this.updateMode}
-          options={options}
-          onChangeOption={updateOption}
+          options={options[sortMode]}
+          onChangeOption={this.updateOption}
         />
       </LibraryDiv>
     );

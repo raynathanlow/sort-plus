@@ -1,4 +1,5 @@
-import React from "react";
+import React, { Component } from "react";
+import request from "request";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 
@@ -17,6 +18,8 @@ const AlbumLink = styled.span`
 `;
 
 const AlbumLi = styled.li`
+  color: white;
+
   @media (min-width: 500px) {
     flex: 0 1 50%;
   }
@@ -90,50 +93,91 @@ const Explicit = styled.span`
   letter-spacing: 0.015em;
 `;
 
-function Album(props) {
-  const { publicUrl, image, name, artistNames, totalTracks, explicit } = props;
+class Album extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      publicUrl: "",
+      image: "",
+      name: "",
+      artistNames: "",
+      totalTracks: "",
+      explicit: false
+    };
+  }
 
-  return (
-    <AlbumLi>
-      <AlbumDiv>
-        <AlbumImgDiv>
-          <AlbumImg src={image} alt={name} />
-        </AlbumImgDiv>
+  componentDidMount() {
+    console.log("Album.jsx componentDidMount");
 
-        <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
-          <AlbumLink className="link-spanner" />
-        </a>
+    const { albumId } = this.props;
 
-        <InfoDiv>
-          <div>
+    request.get(
+      {
+        url: `${window.location.origin}/api/library/album?albumId=${albumId}`,
+        json: true
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          this.setState({
+            publicUrl: body.publicUrl,
+            image: body.images[1].url,
+            name: body.name,
+            artistNames: body.artistNames,
+            totalTracks: body.totalTracks,
+            explicit: body.explicit
+          });
+        }
+      }
+    );
+  }
+
+  render() {
+    const {
+      publicUrl,
+      image,
+      name,
+      artistNames,
+      totalTracks,
+      explicit
+    } = this.state;
+
+    return (
+      <AlbumLi>
+        <AlbumDiv>
+          <AlbumImgDiv>
+            <AlbumImg src={image} alt={name} />
+          </AlbumImgDiv>
+
+          <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
+            <AlbumLink className="link-spanner" />
+          </a>
+
+          <InfoDiv>
             <div>
-              <AlbumName>{name}</AlbumName>
+              <div>
+                <AlbumName>{name}</AlbumName>
+              </div>
+              <div>
+                <OneLine>{artistNames}</OneLine>
+              </div>
             </div>
-            <div>
-              <OneLine>{artistNames}</OneLine>
-            </div>
-          </div>
 
-          <TracksExplicit>
-            <div>
-              {totalTracks}
-              {totalTracks > 1 ? " tracks" : " track"}
-            </div>
-            <div>{explicit ? <Explicit>EXPLICIT</Explicit> : null}</div>
-          </TracksExplicit>
-        </InfoDiv>
-      </AlbumDiv>
-    </AlbumLi>
-  );
+            <TracksExplicit>
+              <div>
+                {totalTracks}
+                {totalTracks > 1 ? " tracks" : " track"}
+              </div>
+              <div>{explicit ? <Explicit>EXPLICIT</Explicit> : null}</div>
+            </TracksExplicit>
+          </InfoDiv>
+        </AlbumDiv>
+      </AlbumLi>
+    );
+  }
 }
 
 Album.propTypes = {
-  publicUrl: PropTypes.string.isRequired,
-  image: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  artistNames: PropTypes.string.isRequired,
-  totalTracks: PropTypes.number.isRequired,
-  explicit: PropTypes.bool.isRequired
+  albumId: PropTypes.string.isRequired
 };
 
 export default Album;

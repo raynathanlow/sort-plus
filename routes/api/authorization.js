@@ -8,78 +8,82 @@ const request = require("request");
 
 const User = require("../../models/User");
 
-router.post("/callback", (req, res) => {
-  console.log("enter callback");
+function getTokens(code) {
+  return new Promise((resolve, reject) => {
+    const authorization = Buffer.from(
+      `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
+    ).toString("base64");
 
-  const { code } = req.body;
+    request.post(
+      {
+        url: "https://accounts.spotify.com/api/token",
+        form: {
+          code,
+          redirect_uri: process.env.REDIRECT_URI,
+          grant_type: "authorization_code"
+        },
+        headers: {
+          Authorization: `Basic ${authorization}`
+        },
+        json: true
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          resolve(body);
+        }
+        reject();
+      }
+    );
+  });
+}
 
-  const authorization = Buffer.from(
-    `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
-  ).toString("base64");
-
-  const tokenOptions = {
-    url: "https://accounts.spotify.com/api/token",
-    form: {
-      code,
-      redirect_uri: process.env.REDIRECT_URI,
-      grant_type: "authorization_code"
-    },
-    headers: {
-      Authorization: `Basic ${authorization}`
-    },
-    json: true
-  };
-
-  // Request tokens
-  request.post(tokenOptions, (error, response, body) => {
-    if (!error && response.statusCode === 200) {
-      const accessToken = body.access_token;
-      const refreshToken = body.refresh_token;
-
-      // Request current user's profile
-      const profileOptions = {
+function getUserProfile(accessToken) {
+  return new Promise((resolve, reject) => {
+    request.get(
+      {
         url: "https://api.spotify.com/v1/me",
         headers: {
           Authorization: `Bearer ${accessToken}`
         },
         json: true
-      };
-
-      request.get(profileOptions, (getError, getResponse, getBody) => {
-        if (!getError && getResponse.statusCode === 200) {
-          const doc = {}; // MongoDB doc to update
-
-          const spotifyId = getBody.id;
-
-          doc.spotifyId = spotifyId;
-          doc.refreshToken = refreshToken;
-
-          if (getBody.display_name !== null) {
-            doc.display_name = getBody.display_name;
-          }
-
-          req.session.user = spotifyId;
-          req.session.accessToken = accessToken;
-          req.session.refreshToken = refreshToken;
-
-          // Create or Update User in database
-          // upsert option is true so that when there are no documents found,
-          // a new document is inserted
-          User.updateOne(
-            { spotifyId },
-            doc,
-            { upsert: true, runValidators: true },
-            () => {
-              res.send(spotifyId);
-            }
-          );
-        } else {
-          console.log(error);
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          resolve(body);
         }
+
+        reject();
+      }
+    );
+  });
+}
+
+router.post("/callback", (req, res) => {
+  const doc = {}; // MongoDB doc to update
+
+  getTokens(req.body.code).then(tokens => {
+    req.session.accessToken = tokens.access_token;
+    req.session.refreshToken = tokens.refresh_token;
+
+    doc.refreshToken = tokens.refresh_token;
+
+    // Set expiration time 50 minutes from now instead of 60 minutes
+    // to give some buffer time for requests
+    req.session.accessExpiration = Date.now() + 3000000;
+
+    getUserProfile(tokens.access_token).then(profile => {
+      const spotifyId = profile.id; // Necessary for MongoDB filter parameter below
+      req.session.user = spotifyId;
+      doc.spotifyId = spotifyId;
+
+      if (profile.display_name !== null) {
+        doc.display_name = profile.display_name;
+      }
+
+      User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
+        res.send(profile.id);
       });
-    } else {
-      console.log(error);
-    }
+    });
   });
 });
 
