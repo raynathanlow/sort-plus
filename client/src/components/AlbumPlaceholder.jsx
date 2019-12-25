@@ -1,5 +1,13 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+import placeholderImg from "../placeholder.png";
+
+const loading = keyframes`
+  to {
+    opacity: 0.3;
+  }
+`;
 
 const AlbumLi = styled.li`
   color: white;
@@ -31,6 +39,10 @@ const AlbumImgDiv = styled.div`
   display: flex;
   align-items: center;
   flex: 0 1 30%;
+
+  background-color: #282828;
+
+  animation: ${loading} 1s alternate infinite ease-in-out;
 `;
 
 const AlbumImg = styled.img`
@@ -57,10 +69,9 @@ const TracksExplicit = styled.div`
 
 const Skeleton = styled.div`
   height: 1.5em;
-  background-repeat: no-repeat;
-  background-image: linear-gradient(white 100%, transparent 0);
-  background-size: 100% 100%;
-  background-color: white;
+  background-color: #282828;
+
+  animation: ${loading} 1s alternate infinite ease-in-out;
 `;
 
 const AlbumNameSkeleton = styled(Skeleton)`
@@ -81,7 +92,7 @@ function AlbumPlaceholder() {
     <AlbumLi>
       <AlbumDiv>
         <AlbumImgDiv>
-          <AlbumImg src="https:via.placeholder.com/300" />
+          <AlbumImg src={placeholderImg} />
         </AlbumImgDiv>
 
         <InfoDiv>

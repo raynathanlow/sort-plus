@@ -1,9 +1,11 @@
 import React, { Component } from "react";
 import request from "request";
 import styled from "styled-components";
+import LazyLoad from "react-lazyload";
 
 import Album from "./Album";
 import Controls from "./Controls";
+import AlbumPlaceholder from "./AlbumPlaceholder";
 
 const LibraryH1 = styled.h1`
   text-align: center;
@@ -160,7 +162,11 @@ class Library extends Component {
         <AlbumsUl>
           {albumIds.map(albumId => {
             // TODO: Dynamically change height?
-            return <Album key={albumId} albumId={albumId} />;
+            return (
+              <LazyLoad key={albumId} placeholder={<AlbumPlaceholder />}>
+                <Album albumId={albumId} />
+              </LazyLoad>
+            );
           })}
         </AlbumsUl>
 

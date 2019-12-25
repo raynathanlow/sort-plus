@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import request from "request";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import PropTypes from "prop-types";
-import LazyLoad from "react-lazyload";
 
 import AlbumPlaceholder from "./AlbumPlaceholder";
+import placeholderImg from "../placeholder.png";
 
 const AlbumLink = styled.span`
   // https://stackoverflow.com/a/22074404
@@ -50,6 +50,8 @@ const AlbumImgDiv = styled.div`
   display: flex;
   align-items: center;
   flex: 0 1 30%;
+
+  background-color: #282828;
 `;
 
 const AlbumImg = styled.img`
@@ -79,7 +81,7 @@ const OneLine = styled.span`
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1; number of lines to show
+  -webkit-line-clamp: 1; // number of lines to show
 `;
 
 const AlbumName = styled(OneLine)`
@@ -96,16 +98,26 @@ const Explicit = styled.span`
   letter-spacing: 0.015em;
 `;
 
+function generateArtistStr(artistNames) {
+  const result = [];
+
+  artistNames.forEach(artist => {
+    result.push(artist);
+  });
+
+  return result.join(", ");
+}
+
 class Album extends Component {
   constructor(props) {
     super(props);
     this.state = {
       publicUrl: "",
-      image: "https:via.placeholder.com/300",
-      name: "Fetching album data...",
+      image: placeholderImg,
+      name: "",
       artistNames: "",
       totalTracks: "",
-      explicit: false
+      explicit: ""
     };
   }
 
@@ -123,7 +135,7 @@ class Album extends Component {
             publicUrl: body.publicUrl,
             image: body.images[1].url,
             name: body.name,
-            artistNames: body.artistNames,
+            artistNames: generateArtistStr(body.artistNames),
             totalTracks: `${body.totalTracks} ${
               body.totalTracks !== 1 ? " tracks" : " track"
             }`,
@@ -144,36 +156,39 @@ class Album extends Component {
       explicit
     } = this.state;
 
+    if (name === "") {
+      return <AlbumPlaceholder />;
+    }
+
     return (
-      <LazyLoad placeholder={<AlbumPlaceholder />}>
-        <AlbumLi>
-          <AlbumDiv>
-            <AlbumImgDiv>
-              <AlbumImg src={image} alt={name} />
-            </AlbumImgDiv>
+      // TODO: Conditionally load AlbumPlaceholder and Album based on state - use a variable?
+      <AlbumLi>
+        <AlbumDiv>
+          <AlbumImgDiv>
+            <AlbumImg src={image} alt={name} />
+          </AlbumImgDiv>
 
-            <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
-              <AlbumLink className="link-spanner" />
-            </a>
+          <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
+            <AlbumLink className="link-spanner" />
+          </a>
 
-            <InfoDiv>
+          <InfoDiv>
+            <div>
               <div>
-                <div>
-                  <AlbumName>{name}</AlbumName>
-                </div>
-                <div>
-                  <OneLine>{artistNames}</OneLine>
-                </div>
+                <AlbumName>{name}</AlbumName>
               </div>
+              <div>
+                <OneLine>{artistNames}</OneLine>
+              </div>
+            </div>
 
-              <TracksExplicit>
-                <div>{totalTracks}</div>
-                <div>{explicit ? <Explicit>EXPLICIT</Explicit> : null}</div>
-              </TracksExplicit>
-            </InfoDiv>
-          </AlbumDiv>
-        </AlbumLi>
-      </LazyLoad>
+            <TracksExplicit>
+              <div>{totalTracks}</div>
+              <div>{explicit ? <Explicit>EXPLICIT</Explicit> : null}</div>
+            </TracksExplicit>
+          </InfoDiv>
+        </AlbumDiv>
+      </AlbumLi>
     );
   }
 }
