@@ -1,0 +1,103 @@
+import React from "react";
+import styled from "styled-components";
+
+const AlbumLi = styled.li`
+  color: white;
+
+  @media (min-width: 500px) {
+    flex: 0 1 50%;
+  }
+
+  @media (min-width: 1000px) {
+    flex: 0 1 33%;
+  }
+
+  @media (min-width: 1500px) {
+    flex: 0 1 25%;
+  }
+`;
+
+const AlbumDiv = styled.div`
+  position: relative; // Needs to be relative for link span
+  display: flex;
+  margin-bottom: 1em;
+
+  @media (min-width: 500px) {
+    padding: 0.5em;
+  }
+`;
+
+const AlbumImgDiv = styled.div`
+  display: flex;
+  align-items: center;
+  flex: 0 1 30%;
+`;
+
+const AlbumImg = styled.img`
+  width: 100%;
+`;
+
+const InfoDiv = styled.div`
+  display: flex;
+  flex: 0 1 70%;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.85em;
+  padding-left: 0.5em;
+`;
+
+const TracksExplicit = styled.div`
+  display: none;
+  justify-content: space-between;
+
+  @media (min-width: 180px) {
+    display: flex;
+  }
+`;
+
+const Skeleton = styled.div`
+  height: 1.5em;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(white 100%, transparent 0);
+  background-size: 100% 100%;
+  background-color: white;
+`;
+
+const AlbumNameSkeleton = styled(Skeleton)`
+  width: 70%;
+  margin-bottom: 0.5em;
+`;
+
+const ArtistNamesSkeleton = styled(Skeleton)`
+  width: 50%;
+`;
+
+const TracksExplicitSkeleton = styled(Skeleton)`
+  width: 33%;
+`;
+
+function AlbumPlaceholder() {
+  return (
+    <AlbumLi>
+      <AlbumDiv>
+        <AlbumImgDiv>
+          <AlbumImg src="https:via.placeholder.com/300" />
+        </AlbumImgDiv>
+
+        <InfoDiv>
+          <div>
+            <AlbumNameSkeleton />
+            <ArtistNamesSkeleton />
+          </div>
+
+          <TracksExplicit>
+            <TracksExplicitSkeleton />
+            <TracksExplicitSkeleton />
+          </TracksExplicit>
+        </InfoDiv>
+      </AlbumDiv>
+    </AlbumLi>
+  );
+}
+
+export default AlbumPlaceholder;

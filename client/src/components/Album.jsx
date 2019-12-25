@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import request from "request";
 import styled from "styled-components";
 import PropTypes from "prop-types";
+import LazyLoad from "react-lazyload";
+
+import AlbumPlaceholder from "./AlbumPlaceholder";
 
 const AlbumLink = styled.span`
   // https://stackoverflow.com/a/22074404
@@ -98,8 +101,8 @@ class Album extends Component {
     super(props);
     this.state = {
       publicUrl: "",
-      image: "",
-      name: "",
+      image: "https:via.placeholder.com/300",
+      name: "Fetching album data...",
       artistNames: "",
       totalTracks: "",
       explicit: false
@@ -107,8 +110,6 @@ class Album extends Component {
   }
 
   componentDidMount() {
-    console.log("Album.jsx componentDidMount");
-
     const { albumId } = this.props;
 
     request.get(
@@ -123,7 +124,9 @@ class Album extends Component {
             image: body.images[1].url,
             name: body.name,
             artistNames: body.artistNames,
-            totalTracks: body.totalTracks,
+            totalTracks: `${body.totalTracks} ${
+              body.totalTracks !== 1 ? " tracks" : " track"
+            }`,
             explicit: body.explicit
           });
         }
@@ -142,36 +145,35 @@ class Album extends Component {
     } = this.state;
 
     return (
-      <AlbumLi>
-        <AlbumDiv>
-          <AlbumImgDiv>
-            <AlbumImg src={image} alt={name} />
-          </AlbumImgDiv>
+      <LazyLoad placeholder={<AlbumPlaceholder />}>
+        <AlbumLi>
+          <AlbumDiv>
+            <AlbumImgDiv>
+              <AlbumImg src={image} alt={name} />
+            </AlbumImgDiv>
 
-          <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
-            <AlbumLink className="link-spanner" />
-          </a>
+            <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
+              <AlbumLink className="link-spanner" />
+            </a>
 
-          <InfoDiv>
-            <div>
+            <InfoDiv>
               <div>
-                <AlbumName>{name}</AlbumName>
+                <div>
+                  <AlbumName>{name}</AlbumName>
+                </div>
+                <div>
+                  <OneLine>{artistNames}</OneLine>
+                </div>
               </div>
-              <div>
-                <OneLine>{artistNames}</OneLine>
-              </div>
-            </div>
 
-            <TracksExplicit>
-              <div>
-                {totalTracks}
-                {totalTracks > 1 ? " tracks" : " track"}
-              </div>
-              <div>{explicit ? <Explicit>EXPLICIT</Explicit> : null}</div>
-            </TracksExplicit>
-          </InfoDiv>
-        </AlbumDiv>
-      </AlbumLi>
+              <TracksExplicit>
+                <div>{totalTracks}</div>
+                <div>{explicit ? <Explicit>EXPLICIT</Explicit> : null}</div>
+              </TracksExplicit>
+            </InfoDiv>
+          </AlbumDiv>
+        </AlbumLi>
+      </LazyLoad>
     );
   }
 }

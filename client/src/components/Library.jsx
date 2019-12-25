@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import request from "request";
 import styled from "styled-components";
-import LazyLoad from "react-lazyload";
 
 import Album from "./Album";
 import Controls from "./Controls";
@@ -161,11 +160,7 @@ class Library extends Component {
         <AlbumsUl>
           {albumIds.map(albumId => {
             // TODO: Dynamically change height?
-            return (
-              <LazyLoad key={albumId} height={200}>
-                <Album albumId={albumId} />
-              </LazyLoad>
-            );
+            return <Album key={albumId} albumId={albumId} />;
           })}
         </AlbumsUl>
 
