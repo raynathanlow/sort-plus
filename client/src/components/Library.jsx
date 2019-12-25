@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import request from "request";
 import styled from "styled-components";
+import LazyLoad from "react-lazyload";
 
 import Album from "./Album";
 import Controls from "./Controls";
@@ -151,7 +152,12 @@ class Library extends Component {
       <LibraryDiv>
         <LibraryH1>{selectedOption}</LibraryH1>
         {albumIds.map(albumId => {
-          return <Album key={albumId} albumId={albumId} />;
+          // TODO: Dynamically change height?
+          return (
+            <LazyLoad key={albumId} height={200}>
+              <Album albumId={albumId} />
+            </LazyLoad>
+          );
         })}
         <Controls
           selected={sortMode}

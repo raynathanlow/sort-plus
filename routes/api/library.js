@@ -388,6 +388,7 @@ router.get("/update", (req, res) => {
       )
         .lean()
         .then(user => {
+          // TODO: sortedBy query parameter
           const response = {
             albumIds: user.sortedByDuration["3 m"],
             options: {
@@ -403,14 +404,10 @@ router.get("/update", (req, res) => {
 });
 
 router.get("/album", (req, res) => {
-  getAccessToken(req).then(accessToken => {
-    updateLibrary(accessToken, req.session.user).then(() => {
-      Album.findOne({ id: req.query.albumId })
-        .lean()
-        .then(album => res.send(album))
-        .catch(error => res.send(error));
-    });
-  });
+  Album.findOne({ id: req.query.albumId })
+    .lean()
+    .then(album => res.send(album))
+    .catch(error => res.send(error));
 });
 
 module.exports = router;

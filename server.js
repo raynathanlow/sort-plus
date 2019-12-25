@@ -50,11 +50,11 @@ app.use(
 app.use("/api/login", authorization);
 app.use("/api/library", libraryRouter);
 
-// app.use(express.static(path.join(__dirname, "client/build")));
+app.use(express.static(path.join(__dirname, "client/build")));
 
-// app.get("/*", function(req, res) {
-//   res.sendFile(path.join(__dirname, "client/build", "index.html"));
-// });
+app.get("/*", function(req, res) {
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
 
 const port = process.env.PORT || 3001;
 
