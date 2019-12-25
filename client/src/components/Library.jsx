@@ -6,19 +6,25 @@ import LazyLoad from "react-lazyload";
 import Album from "./Album";
 import Controls from "./Controls";
 
-const LibraryDiv = styled.div`
-  background-color: #111114;
-`;
-
 const LibraryH1 = styled.h1`
   text-align: center;
   color: white;
   margin: 0;
   margin-bottom: 1em;
-  font-size: 1.25em;
+  font-size: 1.75em;
 
   @media (min-width: 500px) {
-    font-size: 1.5em;
+    font-size: 2em;
+  }
+`;
+
+const AlbumsUl = styled.ul`
+  list-style-type: none;
+  padding: 0 0.5em;
+
+  @media (min-width: 500px) {
+    display: flex;
+    flex-wrap: wrap;
   }
 `;
 
@@ -107,7 +113,8 @@ class Library extends Component {
         (error, response, body) => {
           if (!error && response.statusCode === 200) {
             this.setState({
-              albumIds: body
+              albumIds: body,
+              selectedOption: firstOption
             });
           }
         }
@@ -149,23 +156,26 @@ class Library extends Component {
     const { sortMode, albumIds, options, selectedOption } = this.state;
 
     return (
-      <LibraryDiv>
+      <div>
         <LibraryH1>{selectedOption}</LibraryH1>
-        {albumIds.map(albumId => {
-          // TODO: Dynamically change height?
-          return (
-            <LazyLoad key={albumId} height={200}>
-              <Album albumId={albumId} />
-            </LazyLoad>
-          );
-        })}
+        <AlbumsUl>
+          {albumIds.map(albumId => {
+            // TODO: Dynamically change height?
+            return (
+              <LazyLoad key={albumId} height={200}>
+                <Album albumId={albumId} />
+              </LazyLoad>
+            );
+          })}
+        </AlbumsUl>
+
         <Controls
           selected={sortMode}
           onChangeSort={this.updateMode}
           options={options[sortMode]}
           onChangeOption={this.updateOption}
         />
-      </LibraryDiv>
+      </div>
     );
   }
 }

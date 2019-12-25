@@ -7,11 +7,13 @@ import Tabs from "./Tabs";
 const tabs = 300; // pixel breakpoint to show tabs
 
 const ControlsDiv = styled.div`
-  position: sticky;
+  position: fixed;
   display: flex;
   flex-direction: column;
   background-color: #282828;
-  bottom: 0;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
 
   @media (min-width: ${tabs}px) {
