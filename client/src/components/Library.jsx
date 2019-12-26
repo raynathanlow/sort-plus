@@ -8,11 +8,15 @@ import Controls from "./Controls";
 import AlbumPlaceholder from "./AlbumPlaceholder";
 
 const LibraryH1 = styled.h1`
+  position: sticky;
+  top: 0;
   text-align: center;
   color: white;
+  background-color: #111114;
   margin: 0;
-  margin-bottom: 1em;
+  padding-bottom: 0.25em;
   font-size: 1.75em;
+  z-index: 15;
 
   @media (min-width: 500px) {
     font-size: 2em;
@@ -161,7 +165,6 @@ class Library extends Component {
         <LibraryH1>{selectedOption}</LibraryH1>
         <AlbumsUl>
           {albumIds.map(albumId => {
-            // TODO: Dynamically change height?
             return (
               <LazyLoad key={albumId} placeholder={<AlbumPlaceholder />}>
                 <Album albumId={albumId} />
