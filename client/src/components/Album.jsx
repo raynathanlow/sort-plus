@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import request from "request";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import PropTypes from "prop-types";
 
 import AlbumPlaceholder from "./AlbumPlaceholder";
