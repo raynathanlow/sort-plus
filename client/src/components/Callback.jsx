@@ -37,7 +37,7 @@ class Callback extends Component {
         if (!error && response.statusCode === 200) {
           // window.location.href = "/library";
           console.log(window.opener);
-          window.opener.postMessage("TEST MESSAGE", "http://localhost:3000");
+          window.opener.postMessage("TEST MESSAGE", constants.TARGET_ORIGIN);
         }
       });
     }
