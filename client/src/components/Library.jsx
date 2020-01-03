@@ -48,12 +48,12 @@ class Library extends Component {
   }
 
   componentDidMount() {
-    // console.log("componentDidMount");
-
     // Get query parameters
     const urlParams = new URLSearchParams(window.location.search);
     const sortModeParam = urlParams.get("sortMode");
     const optionParam = urlParams.get("option");
+
+    if ("caches" in window) console.log("woo!");
 
     // Initialize with default settings first
     request.get(

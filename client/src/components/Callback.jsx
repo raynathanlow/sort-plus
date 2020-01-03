@@ -8,8 +8,6 @@ import { getCookie } from "../Utils";
 
 class Callback extends Component {
   componentDidMount() {
-    console.log("componentDidMount");
-
     const query = document.location.search;
     const searchParams = new URLSearchParams(query);
 
@@ -37,7 +35,9 @@ class Callback extends Component {
 
       request.post(options, (error, response) => {
         if (!error && response.statusCode === 200) {
-          window.location.href = "/library";
+          // window.location.href = "/library";
+          console.log(window.opener);
+          window.opener.postMessage("TEST MESSAGE", "http://localhost:3000");
         }
       });
     }

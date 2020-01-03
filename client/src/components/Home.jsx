@@ -1,7 +1,5 @@
-import React from "react";
+import React, { Component } from "react";
 import styled from "styled-components";
-
-import Button from "./Button";
 
 const HomeDiv = styled.div`
   padding: 0.5em;
@@ -21,17 +19,75 @@ const ButtonDiv = styled.div`
   text-align: center;
 `;
 
-function Home() {
-  return (
-    <HomeDiv>
-      <div>Name</div>
-      <HomeH1>More sorting options for Spotify</HomeH1>
-      <p>Name sorts albums by duration and release date</p>
-      <ButtonDiv>
-        <Button url={`${window.location.href}login`} text="Login" />
-      </ButtonDiv>
-    </HomeDiv>
-  );
+const ButtonA = styled.a`
+  padding: 0.5em 1em;
+  background-color: #1db954;
+  border-radius: 2em;
+  text-decoration: none;
+  color: white;
+`;
+
+// Open and use a popup for Spotify authorization
+// Adapted from https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Best_practices
+
+var windowObjectReference = null; // global variable
+
+function openAuthPopup() {
+  if (windowObjectReference == null || windowObjectReference.closed) {
+    /* if the pointer to the window object in memory does not exist
+     or if such pointer exists but the window was closed */
+
+    windowObjectReference = window.open(
+      "http://localhost:3000/login",
+      "AuthWindowName",
+      "resizable,scrollbars,status"
+    );
+    /* then create it. The new window will be created and
+       will be brought on top of any other window. */
+  } else {
+    windowObjectReference.focus();
+    /* else the window reference must exist and the window
+       is not closed; therefore, we can bring it back on top of any other
+       window with the focus() method. There would be no need to re-create
+       the window or to reload the referenced resource. */
+  }
+}
+
+function click() {
+  openAuthPopup();
+  return false;
+}
+
+function updateAuthInfo(e) {
+  if (windowObjectReference !== null) {
+    window.location.href = "/library";
+    windowObjectReference.close();
+  }
+}
+
+window.addEventListener("message", updateAuthInfo);
+
+class Home extends Component {
+  componentDidMount() {}
+
+  render() {
+    return (
+      <HomeDiv>
+        <div>Name</div>
+        <HomeH1>More sorting options for Spotify</HomeH1>
+        <p>Name sorts albums by duration and release date</p>
+        <ButtonDiv>
+          <ButtonA
+            href={`${window.location.href}login`}
+            onClick={click}
+            target="AuthWindowName"
+          >
+            Login
+          </ButtonA>
+        </ButtonDiv>
+      </HomeDiv>
+    );
+  }
 }
 
 export default Home;

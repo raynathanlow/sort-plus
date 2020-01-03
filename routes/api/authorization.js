@@ -31,7 +31,7 @@ function getTokens(code) {
         if (!error && response.statusCode === 200) {
           resolve(body);
         }
-        reject();
+        reject(body);
       }
     );
   });
@@ -52,7 +52,7 @@ function getUserProfile(accessToken) {
           resolve(body);
         }
 
-        reject();
+        reject(body);
       }
     );
   });
@@ -61,30 +61,34 @@ function getUserProfile(accessToken) {
 router.post("/callback", (req, res) => {
   const doc = {}; // MongoDB doc to update
 
-  getTokens(req.body.code).then(tokens => {
-    req.session.accessToken = tokens.access_token;
-    req.session.refreshToken = tokens.refresh_token;
+  getTokens(req.body.code)
+    .then(tokens => {
+      req.session.accessToken = tokens.access_token;
+      req.session.refreshToken = tokens.refresh_token;
 
-    doc.refreshToken = tokens.refresh_token;
+      doc.refreshToken = tokens.refresh_token;
 
-    // Set expiration time 50 minutes from now instead of 60 minutes
-    // to give some buffer time for requests
-    req.session.accessExpiration = Date.now() + 3000000;
+      // Set expiration time 50 minutes from now instead of 60 minutes
+      // to give some buffer time for requests
+      req.session.accessExpiration = Date.now() + 3000000;
 
-    getUserProfile(tokens.access_token).then(profile => {
-      const spotifyId = profile.id; // Necessary for MongoDB filter parameter below
-      req.session.user = spotifyId;
-      doc.spotifyId = spotifyId;
+      getUserProfile(tokens.access_token)
+        .then(profile => {
+          const spotifyId = profile.id; // Necessary for MongoDB filter parameter below
+          req.session.user = spotifyId;
+          doc.spotifyId = spotifyId;
 
-      if (profile.display_name !== null) {
-        doc.display_name = profile.display_name;
-      }
+          if (profile.display_name !== null) {
+            doc.display_name = profile.display_name;
+          }
 
-      User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
-        res.send(profile.id);
-      });
-    });
-  });
+          User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
+            res.send(profile.id);
+          });
+        })
+        .catch(error => console.log("getUserProfile", error));
+    })
+    .catch(error => console.log("getTokens", error));
 });
 
 module.exports = router;
