@@ -38,7 +38,7 @@ function openAuthPopup() {
      or if such pointer exists but the window was closed */
 
     windowObjectReference = window.open(
-      "http://localhost:3000/login",
+      `${window.location.href}login`,
       "AuthWindowName",
       "resizable,scrollbars,status"
     );
