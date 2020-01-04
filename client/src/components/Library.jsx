@@ -53,7 +53,7 @@ class Library extends Component {
     const sortModeParam = urlParams.get("sortMode");
     const optionParam = urlParams.get("option");
 
-    if ("caches" in window) console.log("woo!");
+    let networkDataReceived = false;
 
     // Initialize with default settings first
     request.get(
@@ -63,6 +63,10 @@ class Library extends Component {
       },
       (error, response, body) => {
         if (!error && response.statusCode === 200) {
+          networkDataReceived = true;
+
+          console.log("networkDataReceived");
+
           // TODO: Don't set state if array is empty
           this.setState({
             albumIds: body.albumIds,
@@ -71,6 +75,31 @@ class Library extends Component {
         }
       }
     );
+
+    if ("caches" in window) {
+      caches.open("v1").then(cache => {
+        cache
+          .match(
+            `${window.location.origin}/api/library/initialize?sortMode=${sortModeParam}&option=${optionParam}`
+          )
+          .then(response => {
+            if (response !== undefined && !networkDataReceived) {
+              console.log("Getting data from cache...");
+              response.json().then(data => {
+                this.setState({
+                  albumIds: data.albumIds,
+                  options: data.options
+                });
+              });
+            } else {
+              console.log("Adding to cache...");
+              cache.add(
+                `${window.location.origin}/api/library/initialize?sortMode=${sortModeParam}&option=${optionParam}`
+              );
+            }
+          });
+      });
+    }
 
     // Update library asynchronously, which will re-render, if necessary
     // request.get(
