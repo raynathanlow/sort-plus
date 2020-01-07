@@ -339,24 +339,19 @@ router.get("/", (req, res) => {
     .catch(error => res.send(error));
 });
 
-// Endpoint used to get initial values to render list of albums and controls
-router.get("/initialize", (req, res) => {
-  const arrayToFind = "sortedByDuration";
-
+// Endpoint used to get options for each sort mode
+router.get("/options", (req, res) => {
   User.findOne(
     { spotifyId: req.session.user },
     "sortedByDuration sortedByReleaseYear"
   )
     .lean()
     .then(user => {
-      const response = {
-        albumIds: user[arrayToFind]["1 m"],
-        options: {
-          duration: Object.keys(user.sortedByDuration),
-          releaseYear: Object.keys(user.sortedByReleaseYear)
-        }
+      const options = {
+        duration: Object.keys(user.sortedByDuration),
+        releaseYear: Object.keys(user.sortedByReleaseYear)
       };
-      res.send(response);
+      res.send(options);
     })
     .catch(error => res.send(error));
 });

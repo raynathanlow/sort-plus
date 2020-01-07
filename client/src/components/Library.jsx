@@ -33,12 +33,19 @@ const AlbumsUl = styled.ul`
   }
 `;
 
+// Defaults
+const defaultSortMode = "duration";
+const defaultOption = "1 m";
+
+const optionsUrl = `${window.location.origin}/api/library/options`;
+const albumIdsUrl = `${window.location.origin}/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`;
+
 class Library extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      sortMode: "duration",
-      selectedOption: "1m",
+      sortMode: defaultSortMode,
+      selectedOption: defaultOption,
       albumIds: [],
       options: {
         duration: [],
@@ -48,75 +55,35 @@ class Library extends Component {
   }
 
   componentDidMount() {
-    // Get query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const sortModeParam = urlParams.get("sortMode");
-    const optionParam = urlParams.get("option");
-
-    let networkDataReceived = false;
-
-    // Initialize with default settings first
+    // Get all available options
     request.get(
       {
-        url: `${window.location.origin}/api/library/initialize?sortMode=${sortModeParam}&option=${optionParam}`,
+        url: optionsUrl,
         json: true
       },
-      (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          networkDataReceived = true;
-
-          console.log("networkDataReceived");
-
-          // TODO: Don't set state if array is empty
+      (optionsErr, optionsRes, optionsBody) => {
+        if (!optionsErr && optionsRes.statusCode === 200) {
           this.setState({
-            albumIds: body.albumIds,
-            options: body.options
+            options: optionsBody
           });
+
+          // Get album IDs based on defaults
+          request.get(
+            {
+              url: albumIdsUrl,
+              json: true
+            },
+            (albumIdsErr, albumsIdsRes, albumIdsBody) => {
+              if (!albumIdsErr && albumsIdsRes.statusCode === 200) {
+                this.setState({
+                  albumIds: albumIdsBody
+                });
+              }
+            }
+          );
         }
       }
     );
-
-    if ("caches" in window) {
-      caches.open("v1").then(cache => {
-        cache
-          .match(
-            `${window.location.origin}/api/library/initialize?sortMode=${sortModeParam}&option=${optionParam}`
-          )
-          .then(response => {
-            if (response !== undefined && !networkDataReceived) {
-              console.log("Getting data from cache...");
-              response.json().then(data => {
-                this.setState({
-                  albumIds: data.albumIds,
-                  options: data.options
-                });
-              });
-            } else {
-              console.log("Adding to cache...");
-              cache.add(
-                `${window.location.origin}/api/library/initialize?sortMode=${sortModeParam}&option=${optionParam}`
-              );
-            }
-          });
-      });
-    }
-
-    // Update library asynchronously, which will re-render, if necessary
-    // request.get(
-    //   {
-    //     url: `${window.location.origin}/api/library/update`,
-    //     json: true
-    //   },
-    //   (error, response, body) => {
-    //     if (!error && response.statusCode === 200) {
-    //       // TODO: Check if there is difference between current state and body before setting state
-    //       this.setState({
-    //         albumIds: body.albumIds,
-    //         options: body.options
-    //       });
-    //     }
-    //   }
-    // );
   }
 
   updateMode = e => {
@@ -125,15 +92,6 @@ class Library extends Component {
     // When sortMode has changed (current sortMode and e.target.value are not the same
     if (sortMode !== e.target.value) {
       const firstOption = options[e.target.value][0];
-
-      window.history.pushState(
-        {
-          sortMode: e.target.value,
-          option: firstOption
-        },
-        "",
-        `?sortMode=${e.target.value}&option=${firstOption}`
-      );
 
       this.setState({
         sortMode: e.target.value
@@ -160,15 +118,6 @@ class Library extends Component {
     const { sortMode } = this.state;
 
     const selectedOption = e.target.value;
-
-    window.history.pushState(
-      {
-        sortMode,
-        option: selectedOption
-      },
-      "",
-      `?sortMode=${sortMode}&option=${selectedOption}`
-    );
 
     request.get(
       {
@@ -204,6 +153,7 @@ class Library extends Component {
 
         <Controls
           selected={sortMode}
+          value={selectedOption}
           onChangeSort={this.updateMode}
           options={options[sortMode]}
           onChangeOption={this.updateOption}

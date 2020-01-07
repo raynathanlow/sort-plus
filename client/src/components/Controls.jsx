@@ -84,7 +84,7 @@ const Select = styled.select`
 `;
 
 function Controls(props) {
-  const { onChangeSort, selected, onChangeOption, options } = props;
+  const { onChangeSort, selected, value, onChangeOption, options } = props;
 
   return (
     <ControlsDiv>
@@ -111,7 +111,12 @@ function Controls(props) {
       </SortDiv>
 
       <OptionsDiv>
-        <Select name="options" id="options-select" onChange={onChangeOption}>
+        <Select
+          name="options"
+          id="options-select"
+          onChange={onChangeOption}
+          value={value}
+        >
           {options.map(option => {
             return (
               <option key={option} value={option}>
@@ -128,6 +133,7 @@ function Controls(props) {
 Controls.propTypes = {
   onChangeSort: PropTypes.func.isRequired,
   selected: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
   onChangeOption: PropTypes.func.isRequired,
   options: PropTypes.arrayOf(PropTypes.string).isRequired
 };
