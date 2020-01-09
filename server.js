@@ -4,7 +4,7 @@ const path = require("path");
 
 const mongoose = require("mongoose");
 
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const authorization = require("./routes/api/authorization");
@@ -14,7 +14,7 @@ const app = express();
 
 // Body parsing middleware
 app.use(express.json());
-app.use(cookieParser());
+// app.use(cookieParser());
 
 // MongoDB Config
 const db = process.env.MONGO_URI;
@@ -38,14 +38,24 @@ connection.once("open", () => {
   console.log("MongoDB connected...");
 });
 
-app.use(
-  session({
-    name: "GozegeSession",
-    secret: "uzPGdq3LedYXJg2pWp23YbTGCFXRgXuc",
-    resave: false, // Forces session to be saved back to the session store
-    saveUninitialized: false // Forces 'uninitialized' session to be saved to the store
-  })
-);
+const sess = {
+  name: "id",
+  secret: "uzPGdq3LedYXJg2pWp23YbTGCFXRgXuc",
+  resave: false, // Forces session to be saved back to the session store
+  saveUninitialized: false, // Forces 'uninitialized' session to be saved to the store
+  cookie: {
+    sameSite: "strict",
+    maxAge: 2592000000 // 30 days in milliseconds
+  }
+};
+
+// Only use secure cookies in production
+if (app.get("env") === "production") {
+  // app.set("trust proxy", 1); // trust first proxy
+  sess.cookie.secure = true; // serve secure cookies
+}
+
+app.use(session(sess));
 
 app.use("/api/login", authorization);
 app.use("/api/library", libraryRouter);
