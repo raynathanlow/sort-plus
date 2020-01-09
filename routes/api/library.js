@@ -356,24 +356,6 @@ router.get("/options", (req, res) => {
     .catch(error => res.send(error));
 });
 
-router.get("/options", (req, res) => {
-  User.findOne(
-    { spotifyId: req.session.user },
-    "sortedByDuration sortedByReleaseYear"
-  )
-    .lean()
-    .then(user => {
-      const response = {
-        options: {
-          duration: Object.keys(user.sortedByDuration),
-          releaseYear: Object.keys(user.sortedByReleaseYear)
-        }
-      };
-      res.send(response);
-    })
-    .catch(error => res.send(error));
-});
-
 router.get("/update", (req, res) => {
   getAccessToken(req).then(accessToken => {
     updateLibrary(accessToken, req.session.user).then(() => {
