@@ -1,7 +1,7 @@
 const express = require("express");
 const session = require("express-session");
+const MongoStore = require("connect-mongo")(session); //
 const path = require("path");
-
 const mongoose = require("mongoose");
 
 // const cookieParser = require("cookie-parser");
@@ -46,7 +46,8 @@ const sess = {
   cookie: {
     sameSite: "strict",
     maxAge: 2592000000 // 30 days in milliseconds
-  }
+  },
+  store: new MongoStore({ mongooseConnection: connection })
 };
 
 // Only use secure cookies in production

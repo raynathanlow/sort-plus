@@ -82,6 +82,11 @@ router.post("/callback", (req, res) => {
             doc.display_name = profile.display_name;
           }
 
+          req.session.save(function(err) {
+            console.log("Session saved!");
+            console.log("err", err);
+          });
+
           User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
             res.send(profile.id);
           });
