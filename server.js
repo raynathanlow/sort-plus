@@ -40,7 +40,7 @@ connection.once("open", () => {
 
 const sess = {
   name: "id",
-  secret: "uzPGdq3LedYXJg2pWp23YbTGCFXRgXuc",
+  secret: process.env.SESSION_SECRET,
   resave: false, // Forces session to be saved back to the session store
   saveUninitialized: false, // Forces 'uninitialized' session to be saved to the store
   cookie: {
