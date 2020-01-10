@@ -1,10 +1,15 @@
 import React, { Component } from "react";
 
-import { generateRandomString } from "../Utils";
+import { generateRandomString, getCookie } from "../Utils";
 import * as constants from "../Constants";
 
 class Login extends Component {
   componentDidMount() {
+    if (getCookie("loggedIn") === "true") {
+      window.location.href = "/library";
+      return;
+    }
+
     // Generate state
     const state = generateRandomString(16);
     // Set state as cookie

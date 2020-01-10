@@ -8,6 +8,8 @@ import { getCookie } from "../Utils";
 
 class Callback extends Component {
   componentDidMount() {
+    if (getCookie("loggedIn") === "true") window.location.href = "/library";
+
     const query = document.location.search;
     const searchParams = new URLSearchParams(query);
 
@@ -36,7 +38,8 @@ class Callback extends Component {
       request.post(options, (error, response) => {
         if (!error && response.statusCode === 200) {
           // window.location.href = "/library";
-          console.log(window.opener);
+          document.cookie = "loggedIn=true; max-age=" + 60 * 60 * 24 * 30;
+
           window.opener.postMessage("TEST MESSAGE", constants.TARGET_ORIGIN);
         }
       });

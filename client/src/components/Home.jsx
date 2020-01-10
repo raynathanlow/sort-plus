@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import styled from "styled-components";
 
+import { getCookie } from "../Utils";
+
 const HomeDiv = styled.div`
   padding: 0.5em;
   font-size: 0.85em;
@@ -68,7 +70,9 @@ function updateAuthInfo(e) {
 window.addEventListener("message", updateAuthInfo);
 
 class Home extends Component {
-  componentDidMount() {}
+  componentDidMount() {
+    if (getCookie("loggedIn") === "true") window.location.href = "/library";
+  }
 
   render() {
     return (
