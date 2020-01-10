@@ -38,6 +38,8 @@ connection.once("open", () => {
   console.log("MongoDB connected...");
 });
 
+const store = new MongoStore({ mongooseConnection: connection });
+
 const sess = {
   name: "id",
   secret: process.env.SESSION_SECRET,
@@ -47,7 +49,7 @@ const sess = {
     sameSite: "strict",
     maxAge: 2592000000 // 30 days in milliseconds
   },
-  store: new MongoStore({ mongooseConnection: connection })
+  store
 };
 
 // Only use secure cookies in production
@@ -57,6 +59,13 @@ if (app.get("env") === "production") {
 }
 
 app.use(session(sess));
+
+// store.length(function(error, len) {
+//   console.log("error", error);
+//   console.log("len", len);
+// });
+
+app.set("store", store);
 
 app.use("/api/login", authorization);
 app.use("/api/library", libraryRouter);

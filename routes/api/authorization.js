@@ -82,6 +82,11 @@ router.post("/callback", (req, res) => {
             doc.display_name = profile.display_name;
           }
 
+          // req.app.get("store").length(function(error, len) {
+          //   console.log("error", error);
+          //   console.log("len", len);
+          // });
+
           User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
             res.send(profile.id);
           });
