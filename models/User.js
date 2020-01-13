@@ -21,6 +21,10 @@ const UserSchema = new Schema({
   sortedByReleaseYear: {
     type: {},
     required: [true, "No albums sorted by release year"]
+  },
+  savedAlbums: {
+    type: [{}],
+    required: [true, "No saved albums"]
   }
 });
 

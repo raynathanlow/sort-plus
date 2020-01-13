@@ -119,7 +119,7 @@ function sortAlbums(albums, sortMode) {
 function addSortedAlbumsToDb(albums, spotifyId) {
   return new Promise((resolve, reject) => {
     const doc = {
-      sortedByDuration: sortAlbums(albums, "durationMs"),
+      sortedByDuration: sortAlbums(albums, "duration_ms"),
       sortedByReleaseYear: sortAlbums(albums, "releaseYear")
     };
 
@@ -166,22 +166,22 @@ function addToDb(album) {
       doc.artistNames.push(artist.name);
     });
 
-    doc.durationMs = 0;
+    doc.duration_ms = 0;
     doc.explicit = false;
 
     // If album object has durationMs key, this means that it was processed further to calculate
     // the album's duration. There is a limit of 50 tracks provided in the album object
-    if (!album.durationMs) {
+    if (!album.duration_ms) {
       // Album doesn't have durationMs key, so album's duration can be calculated here
       album.tracks.items.forEach(track => {
-        doc.durationMs += track.duration_ms;
+        doc.duration_ms += track.duration_ms;
         if (track.explicit) doc.explicit = true;
       });
-      doc.prettyDuration = toHoursAndMinutes(doc.durationMs);
+      doc.prettyDuration = toHoursAndMinutes(doc.duration_ms);
     } else {
       // Album does have durationMs key, so use that value and the other values added while
       // it was processed further
-      doc.durationMs = album.durationMs;
+      doc.duration_ms = album.duration_ms;
       doc.prettyDuration = album.prettyDuration;
       doc.explicit = album.explicit;
     }
@@ -229,14 +229,13 @@ function processOverLimit(album, accessToken) {
               let durationMs = 0;
               let explicit = false;
               tracks.flat().forEach(track => {
-                durationMs += track.durationMs;
+                durationMs += track.duration_ms;
 
                 if (track.explicit) explicit = true;
               });
-
               const modifiedAlbum = album;
 
-              modifiedAlbum.durationMs = durationMs;
+              modifiedAlbum.duration_ms = durationMs;
               modifiedAlbum.prettyDuration = toHoursAndMinutes(durationMs);
               modifiedAlbum.explicit = explicit;
 
@@ -260,14 +259,30 @@ function processOverLimit(album, accessToken) {
 function processAlbums(albums, accessToken, spotifyId) {
   return new Promise((resolve, reject) => {
     const promises = [];
+    const updatedSavedAlbums = [];
 
     albums.forEach(album => {
+      const savedAlbum = {
+        added_at: album.added_at,
+        id: album.album.id
+      };
+      updatedSavedAlbums.push(savedAlbum);
+
       if (album.album.tracks.next === null) {
         promises.push(addToDb(album.album));
       } else {
         promises.push(processOverLimit(album.album, accessToken));
       }
     });
+
+    User.findOneAndUpdate(
+      { spotifyId },
+      { savedAlbums: updatedSavedAlbums },
+      function(err, user) {
+        if (err) throw err;
+        // console.log(user);
+      }
+    );
 
     Promise.all(promises).then(processedAlbums =>
       addSortedAlbumsToDb(processedAlbums, spotifyId).then(resolve())
@@ -356,26 +371,37 @@ router.get("/options", (req, res) => {
     .catch(error => res.send(error));
 });
 
+// Endpoint used to get options for each sort mode
+router.get("/albums", (req, res) => {
+  User.findOne({ spotifyId: req.session.user }, "savedAlbums")
+    .lean()
+    .then(user => {
+      res.send(user.savedAlbums);
+    })
+    .catch(error => res.send(error));
+});
+
 router.get("/update", (req, res) => {
   getAccessToken(req).then(accessToken => {
     updateLibrary(accessToken, req.session.user).then(() => {
-      User.findOne(
-        { spotifyId: req.session.user },
-        "sortedByDuration sortedByReleaseYear"
-      )
-        .lean()
-        .then(user => {
-          // TODO: sortedBy query parameter
-          const response = {
-            albumIds: user.sortedByDuration["3 m"],
-            options: {
-              duration: Object.keys(user.sortedByDuration),
-              releaseYear: Object.keys(user.sortedByReleaseYear)
-            }
-          };
-          res.send(response);
-        })
-        .catch(error => res.send(error));
+      res.send("Library updated!");
+      // User.findOne(
+      //   { spotifyId: req.session.user },
+      //   "sortedByDuration sortedByReleaseYear"
+      // )
+      //   .lean()
+      //   .then(user => {
+      //     // TODO: sortedBy query parameter
+      //     const response = {
+      //       albumIds: user.sortedByDuration["3 m"],
+      //       options: {
+      //         duration: Object.keys(user.sortedByDuration),
+      //         releaseYear: Object.keys(user.sortedByReleaseYear)
+      //       }
+      //     };
+      //     res.send(response);
+      //   })
+      //   .catch(error => res.send(error));
     });
   });
 });
