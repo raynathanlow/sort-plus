@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import styled from "styled-components";
+import { Route, Redirect } from "react-router-dom";
 
 import { getCookie } from "../Utils";
 
@@ -69,29 +70,27 @@ function updateAuthInfo(e) {
 
 window.addEventListener("message", updateAuthInfo);
 
-class Home extends Component {
-  componentDidMount() {
-    if (getCookie("loggedIn") === "true") window.location.href = "/library";
+function Home() {
+  if (getCookie("loggedIn") === "true") {
+    return <Redirect to="/library" />;
   }
 
-  render() {
-    return (
-      <HomeDiv>
-        <div>Name</div>
-        <HomeH1>More sorting options for Spotify</HomeH1>
-        <p>Name sorts albums by duration and release date</p>
-        <ButtonDiv>
-          <ButtonA
-            href={`${window.location.href}login`}
-            onClick={click}
-            target="AuthWindowName"
-          >
-            Login
-          </ButtonA>
-        </ButtonDiv>
-      </HomeDiv>
-    );
-  }
+  return (
+    <HomeDiv>
+      <div>Name</div>
+      <HomeH1>More sorting options for Spotify</HomeH1>
+      <p>Name sorts albums by duration and release date</p>
+      <ButtonDiv>
+        <ButtonA
+          href={`${window.location.href}login`}
+          onClick={click}
+          target="AuthWindowName"
+        >
+          Login
+        </ButtonA>
+      </ButtonDiv>
+    </HomeDiv>
+  );
 }
 
 export default Home;
