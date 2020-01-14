@@ -356,16 +356,22 @@ router.get("/", (req, res) => {
 
 // Endpoint used to get options for each sort mode
 router.get("/options", (req, res) => {
+  console.log("req.session.user", req.session.user);
+
   User.findOne(
     { spotifyId: req.session.user },
     "sortedByDuration sortedByReleaseYear"
   )
     .lean()
     .then(user => {
+      console.log("user", user);
+
       const options = {
         duration: Object.keys(user.sortedByDuration),
         releaseYear: Object.keys(user.sortedByReleaseYear)
       };
+
+      console.log("options", options);
       res.send(options);
     })
     .catch(error => res.send(error));
