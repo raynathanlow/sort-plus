@@ -39,8 +39,6 @@ function openAuthPopup() {
     /* if the pointer to the window object in memory does not exist
      or if such pointer exists but the window was closed */
 
-    console.log("POPUP", `${window.location.href}login`);
-
     windowObjectReference = window.open(
       `${window.location.href}login`,
       "AuthWindowName",
@@ -65,7 +63,7 @@ function click() {
 function updateAuthInfo(e) {
   if (windowObjectReference !== null) {
     window.location.href = "/library";
-    // windowObjectReference.close();
+    windowObjectReference.close();
   }
 }
 

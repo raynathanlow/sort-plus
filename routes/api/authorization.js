@@ -74,8 +74,6 @@ router.post("/callback", (req, res) => {
 
       getUserProfile(tokens.access_token)
         .then(profile => {
-          console.log("/callback profile", profile);
-
           const spotifyId = profile.id; // Necessary for MongoDB filter parameter below
           req.session.user = spotifyId;
           doc.spotifyId = spotifyId;
@@ -88,8 +86,6 @@ router.post("/callback", (req, res) => {
           //   console.log("error", error);
           //   console.log("len", len);
           // });
-
-          console.log("/callback req.session", req.session);
 
           User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
             res.send(profile.id);
