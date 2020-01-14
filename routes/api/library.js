@@ -357,6 +357,7 @@ router.get("/", (req, res) => {
 // Endpoint used to get options for each sort mode
 router.get("/options", (req, res) => {
   console.log("req.session.user", req.session.user);
+  console.log("req.session", req.session);
 
   User.findOne(
     { spotifyId: req.session.user },

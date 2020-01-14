@@ -46,6 +46,7 @@ const sess = {
   resave: false, // Forces session to be saved back to the session store
   saveUninitialized: false, // Forces 'uninitialized' session to be saved to the store
   cookie: {
+    httpOnly: true,
     sameSite: "strict",
     maxAge: 2592000000 // 30 days in milliseconds
   },
