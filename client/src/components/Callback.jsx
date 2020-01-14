@@ -1,7 +1,7 @@
 // This includes code from spotify/web-api-auth-examples/authorization_code/app.js
 
 import React, { Component } from "react";
-import request from "request";
+import axios from "axios";
 
 import * as constants from "../Constants";
 import { getCookie } from "../Utils";
@@ -26,22 +26,15 @@ class Callback extends Component {
       // Delete cookie
       document.cookie = `${constants.STATE_KEY}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 
-      // Make a POST request
-      const options = {
-        url: `${window.location.origin}/api/login/callback`,
-        body: {
+      axios({
+        method: "post",
+        url: "/api/login/callback",
+        data: {
           code
-        },
-        json: true
-      };
-
-      request.post(options, (error, response) => {
-        if (!error && response.statusCode === 200) {
-          // window.location.href = "/library";
-          document.cookie = "loggedIn=true; max-age=" + 60 * 60 * 24 * 30;
-
-          window.opener.postMessage("TEST MESSAGE", constants.TARGET_ORIGIN);
         }
+      }).then(() => {
+        document.cookie = `loggedIn=true; max-age="${60 * 60 * 24 * 30}"`;
+        window.opener.postMessage("TEST MESSAGE", constants.TARGET_ORIGIN);
       });
     }
   }

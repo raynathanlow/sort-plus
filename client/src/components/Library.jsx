@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import request from "request";
+import axios from "axios";
 import styled from "styled-components";
 import LazyLoad from "react-lazyload";
 
@@ -38,46 +38,6 @@ const AlbumsUl = styled.ul`
 const defaultSortMode = "duration";
 const defaultOption = "1 m";
 
-const optionsUrl = `${window.location.origin}/api/library/options`;
-const albumIdsUrl = `${window.location.origin}/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`;
-
-function cacheOptions(options) {
-  // Compile array of requests for all options regardless of sort mode
-  const requests = [];
-
-  options.duration.forEach(durationOption => {
-    requests.push(
-      `${window.location.origin}/api/library?sortMode=duration&option=${durationOption}`
-    );
-  });
-
-  options.releaseYear.forEach(yearOption => {
-    requests.push(
-      `${window.location.origin}/api/library?sortMode=releaseYear&option=${yearOption}`
-    );
-  });
-
-  // Go through both arrays of requests and request them all
-  Promise.all(requests.map(request => fetch(request).then(res => res.json())));
-}
-
-function cacheAlbums(savedAlbums) {
-  console.log(savedAlbums.length);
-  // Compile array of requests for all saved albums
-  const requests = [];
-
-  savedAlbums.forEach(savedAlbum => {
-    requests.push(
-      `${window.location.origin}/api/library/album?albumId=${savedAlbum.id}`
-    );
-  });
-
-  // Go through array of album IDs and request for them all, but don't do anything with them
-  Promise.all(requests.map(request => fetch(request).then(res => res.json())));
-
-  // Once both are done, visually give feedback
-}
-
 class Library extends Component {
   constructor(props) {
     super(props);
@@ -93,48 +53,19 @@ class Library extends Component {
   }
 
   componentDidMount() {
-    // Get all available options
-    request.get(
-      {
-        url: optionsUrl,
-        json: true
-      },
-      (optionsErr, optionsRes, optionsBody) => {
-        if (!optionsErr && optionsRes.statusCode === 200) {
+    axios.get("/api/library/options").then(response => {
+      this.setState({
+        options: response.data
+      });
+
+      axios
+        .get(`/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`)
+        .then(response => {
           this.setState({
-            options: optionsBody
+            albumIds: response.data
           });
-
-          console.log(optionsBody);
-
-          // Get album IDs based on defaults
-          request.get(
-            {
-              url: albumIdsUrl,
-              json: true
-            },
-            (albumIdsErr, albumIdsRes, albumIdsBody) => {
-              if (!albumIdsErr && albumIdsRes.statusCode === 200) {
-                this.setState({
-                  albumIds: albumIdsBody
-                });
-              }
-            }
-          );
-        }
-      }
-    );
-
-    // request.get(
-    //   {
-    //     url: `${window.location.origin}/api/library/update`
-    //   },
-    //   (error, response, body) => {
-    //     if (!error && response.statusCode === 200) {
-    //       console.log(body);
-    //     }
-    //   }
-    // );
+        });
+    });
   }
 
   updateMode = e => {
@@ -148,20 +79,14 @@ class Library extends Component {
         sortMode: e.target.value
       });
 
-      request.get(
-        {
-          url: `${window.location.origin}/api/library?sortMode=${e.target.value}&option=${firstOption}`,
-          json: true
-        },
-        (error, response, body) => {
-          if (!error && response.statusCode === 200) {
-            this.setState({
-              albumIds: body,
-              selectedOption: firstOption
-            });
-          }
-        }
-      );
+      axios
+        .get(`/api/library?sortMode=${e.target.value}&option=${firstOption}`)
+        .then(response => {
+          this.setState({
+            albumIds: response.data,
+            selectedOption: firstOption
+          });
+        });
     }
   };
 
@@ -170,20 +95,14 @@ class Library extends Component {
 
     const selectedOption = e.target.value;
 
-    request.get(
-      {
-        url: `${window.location.origin}/api/library?sortMode=${sortMode}&option=${selectedOption}`,
-        json: true
-      },
-      (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          this.setState({
-            albumIds: body,
-            selectedOption
-          });
-        }
-      }
-    );
+    axios
+      .get(`/api/library?sortMode=${sortMode}&option=${selectedOption}`)
+      .then(response => {
+        this.setState({
+          albumIds: response.data,
+          selectedOption
+        });
+      });
   };
 
   render() {

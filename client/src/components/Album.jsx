@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import request from "request";
+import axios from "axios";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 
@@ -124,26 +124,27 @@ class Album extends Component {
   componentDidMount() {
     const { albumId } = this.props;
 
-    request.get(
-      {
-        url: `${window.location.origin}/api/library/album?albumId=${albumId}`,
-        json: true
-      },
-      (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          this.setState({
-            publicUrl: body.publicUrl,
-            image: body.images[1].url,
-            name: body.name,
-            artistNames: generateArtistStr(body.artistNames),
-            totalTracks: `${body.totalTracks} ${
-              body.totalTracks !== 1 ? " tracks" : " track"
-            }`,
-            explicit: body.explicit
-          });
-        }
-      }
-    );
+    axios
+      .get(`/api/library/album?albumId=${albumId}`)
+      .then(response => {
+        this.setState({
+          publicUrl: response.data.publicUrl,
+          image: response.data.images[1].url,
+          name: response.data.name,
+          artistNames: generateArtistStr(response.data.artistNames),
+          totalTracks: `${response.data.totalTracks} ${
+            response.data.totalTracks !== 1 ? " tracks" : " track"
+          }`,
+          explicit: response.data.explicit
+        });
+      })
+      .catch(function(error) {
+        // handle error
+        console.log(error);
+      })
+      .finally(function() {
+        // always executed
+      });
   }
 
   render() {

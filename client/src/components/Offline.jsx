@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import request from "request";
+import axios from "axios";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 
@@ -30,7 +30,7 @@ function cacheOptions(options) {
   console.log(requests);
 
   // Go through both arrays of requests and request them all
-  Promise.all(requests.map(request => fetch(request).then(res => res.json())));
+  Promise.all(requests.map(request => axios.get(request)));
 }
 
 function cacheAlbums(savedAlbums) {
@@ -39,14 +39,13 @@ function cacheAlbums(savedAlbums) {
   const requests = [];
 
   savedAlbums.forEach(savedAlbum => {
-    console.log(savedAlbum.id);
     requests.push(
       `${window.location.origin}/api/library/album?albumId=${savedAlbum.id}`
     );
   });
 
   // Go through array of album IDs and request for them all, but don't do anything with them
-  Promise.all(requests.map(request => fetch(request).then(res => res.json())));
+  Promise.all(requests.map(request => axios.get(request)));
 
   // Once both are done, visually give feedback
 }
@@ -68,18 +67,9 @@ class Offline extends Component {
 
     cacheOptions(options);
 
-    // Get album IDs based on defaults
-    request.get(
-      {
-        url: `${window.location.origin}/api/library/albums`,
-        json: true
-      },
-      (savedAlbumsErr, savedAlbumsRes, savedAlbumsBody) => {
-        if (!savedAlbumsErr && savedAlbumsRes.statusCode === 200) {
-          cacheAlbums(savedAlbumsBody);
-        }
-      }
-    );
+    axios.get(`${window.location.origin}/api/library/albums`).then(response => {
+      cacheAlbums(response.data);
+    });
 
     // TODO: Once caching is finished, set caching state to false
   };
@@ -98,7 +88,7 @@ class Offline extends Component {
       }
 
       return (
-        <ButtonCaching type="button" disabled="true">
+        <ButtonCaching type="button" disabled={true}>
           Caching
         </ButtonCaching>
       );
