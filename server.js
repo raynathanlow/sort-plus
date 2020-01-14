@@ -59,6 +59,7 @@ if (app.get("env") === "production") {
   sess.cookie.secure = true; // serve secure cookies
 }
 
+app.set("trust proxy", 1); // trust first proxy
 app.use(session(sess));
 
 // store.length(function(error, len) {
