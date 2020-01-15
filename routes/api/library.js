@@ -260,6 +260,7 @@ function processAlbums(albums, accessToken, spotifyId) {
   return new Promise((resolve, reject) => {
     const promises = [];
     const updatedSavedAlbums = [];
+    const updatedSavedAlbumCovers = [];
 
     albums.forEach(album => {
       const savedAlbum = {
@@ -268,6 +269,8 @@ function processAlbums(albums, accessToken, spotifyId) {
       };
       updatedSavedAlbums.push(savedAlbum);
 
+      updatedSavedAlbumCovers.push(album.album.images[1].url);
+
       if (album.album.tracks.next === null) {
         promises.push(addToDb(album.album));
       } else {
@@ -275,12 +278,15 @@ function processAlbums(albums, accessToken, spotifyId) {
       }
     });
 
+    // Update savedAlbums and savedAlbumCovers
     User.findOneAndUpdate(
       { spotifyId },
-      { savedAlbums: updatedSavedAlbums },
+      {
+        savedAlbums: updatedSavedAlbums,
+        savedAlbumCovers: updatedSavedAlbumCovers
+      },
       function(err, user) {
         if (err) throw err;
-        // console.log(user);
       }
     );
 
@@ -371,12 +377,19 @@ router.get("/options", (req, res) => {
     .catch(error => res.send(error));
 });
 
-// Endpoint used to get options for each sort mode
+// Endpoint used to get album IDs and album cover URLs to cache
 router.get("/albums", (req, res) => {
-  User.findOne({ spotifyId: req.session.user }, "savedAlbums")
+  User.findOne({ spotifyId: req.session.user }, "savedAlbums savedAlbumCovers")
     .lean()
     .then(user => {
-      res.send(user.savedAlbums);
+      const response = {
+        savedAlbums: user.savedAlbums,
+        savedAlbumCovers: user.savedAlbumCovers
+      };
+
+      console.log(response);
+
+      res.send(response);
     })
     .catch(error => res.send(error));
 });

@@ -27,21 +27,22 @@ function cacheOptions(options) {
     );
   });
 
-  console.log(requests);
-
   // Go through both arrays of requests and request them all
   Promise.all(requests.map(request => axios.get(request)));
 }
 
 function cacheAlbums(savedAlbums) {
-  console.log(savedAlbums.length);
   // Compile array of requests for all saved albums
   const requests = [];
 
-  savedAlbums.forEach(savedAlbum => {
+  savedAlbums.savedAlbums.forEach(savedAlbum => {
     requests.push(
       `${window.location.origin}/api/library/album?albumId=${savedAlbum.id}`
     );
+  });
+
+  savedAlbums.savedAlbumCovers.forEach(savedAlbumCover => {
+    requests.push(savedAlbumCover);
   });
 
   // Go through array of album IDs and request for them all, but don't do anything with them
@@ -68,6 +69,7 @@ class Offline extends Component {
     cacheOptions(options);
 
     axios.get(`${window.location.origin}/api/library/albums`).then(response => {
+      console.log(response);
       cacheAlbums(response.data);
     });
 

@@ -14,27 +14,37 @@ if ("function" === typeof importScripts) {
       workbox.precaching.getCacheKeyForURL("/index.html")
     );
 
+    // /api/library/album
     workbox.routing.registerRoute(
-      /\.(?:png|gif|jpg|jpeg)$/,
+      /api\/library\/\album\b\?\balbumId=\b.+/,
       new workbox.strategies.CacheFirst({
-        cacheName: "images"
+        cacheName: "albums"
       })
     );
 
+    // /api/library
     workbox.routing.registerRoute(
-      /api\/library.+/,
-      new workbox.strategies.CacheFirst({
-        cacheName: "data"
+      /api\/library\?sortMode\b.+/,
+      new workbox.strategies.NetworkFirst({
+        cacheName: "album-lists"
+      })
+    );
+
+    // /api/library/options
+    workbox.routing.registerRoute(
+      /api\/library\/\options\b/,
+      new workbox.strategies.NetworkFirst({
+        cacheName: "options"
       })
     );
 
     // Not sure if this is necessary? Might be redundant...
-    // workbox.routing.registerRoute(
-    //   /https:\/\/i.scdn.co\/image\/.+/,
-    //   new workbox.strategies.CacheFirst({
-    //     cacheName: "data"
-    //   })
-    // );
+    workbox.routing.registerRoute(
+      /https:\/\/i.scdn.co\/image\/.+/,
+      new workbox.strategies.CacheFirst({
+        cacheName: "data"
+      })
+    );
   } else {
     console.log("Workbox could not be loaded. No Offline support");
   }

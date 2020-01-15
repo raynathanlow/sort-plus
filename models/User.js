@@ -25,6 +25,10 @@ const UserSchema = new Schema({
   savedAlbums: {
     type: [{}],
     required: [true, "No saved albums"]
+  },
+  savedAlbumCovers: {
+    type: [String],
+    required: [true, "No saved album covers"]
   }
 });
 
