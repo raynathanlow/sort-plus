@@ -10,9 +10,9 @@ if ("function" === typeof importScripts) {
     workbox.precaching.precacheAndRoute([]);
 
     /* custom cache rules*/
-    workbox.routing.registerNavigationRoute("/index.html", {
-      blacklist: [/^\/_/, /\/[^\/]+\.[^\/]+$/]
-    });
+    workbox.routing.registerNavigationRoute(
+      workbox.precaching.getCacheKeyForURL("/index.html")
+    );
 
     workbox.routing.registerRoute(
       /\.(?:png|gif|jpg|jpeg)$/,
