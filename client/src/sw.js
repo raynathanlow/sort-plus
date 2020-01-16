@@ -25,7 +25,7 @@ if ("function" === typeof importScripts) {
     // /api/library
     workbox.routing.registerRoute(
       /api\/library\?sortMode\b.+/,
-      new workbox.strategies.NetworkFirst({
+      new workbox.strategies.StaleWhileRevalidate({
         cacheName: "album-lists"
       })
     );
@@ -33,7 +33,7 @@ if ("function" === typeof importScripts) {
     // /api/library/options
     workbox.routing.registerRoute(
       /api\/library\/\options\b/,
-      new workbox.strategies.NetworkFirst({
+      new workbox.strategies.StaleWhileRevalidate({
         cacheName: "options"
       })
     );
