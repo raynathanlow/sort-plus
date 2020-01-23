@@ -34,6 +34,10 @@ const AlbumsUl = styled.ul`
   }
 `;
 
+const OnlineStatus = styled.div`
+  color: white;
+`;
+
 // Defaults
 const defaultSortMode = "duration";
 const defaultOption = "1 m";
@@ -48,25 +52,33 @@ class Library extends Component {
       options: {
         duration: [],
         releaseYear: []
-      }
+      },
+      onlineStatus: false
     };
   }
 
   componentDidMount() {
+    // Check Internet connection and then update onlineStatus state
+    this.checkOnline();
+    this.updateView();
+  }
+
+  updateView = () => {
     axios.get("/api/library/options").then(response => {
-      this.setState({
-        options: response.data
-      });
+      const options = response.data;
 
       axios
         .get(`/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`)
         .then(response => {
+          console.log("Update current view!");
+
           this.setState({
+            options,
             albumIds: response.data
           });
         });
     });
-  }
+  };
 
   updateMode = e => {
     const { sortMode, options } = this.state;
@@ -105,8 +117,24 @@ class Library extends Component {
       });
   };
 
+  checkOnline = () => {
+    axios.get("google.com").then(response => {
+      if (response.status === 200) {
+        this.setState({
+          onlineStatus: true
+        });
+      }
+    });
+  };
+
   render() {
-    const { sortMode, albumIds, options, selectedOption } = this.state;
+    const {
+      sortMode,
+      albumIds,
+      options,
+      selectedOption,
+      onlineStatus
+    } = this.state;
 
     return (
       <div>
@@ -121,7 +149,9 @@ class Library extends Component {
           })}
         </AlbumsUl>
 
-        <Offline options={options} />
+        <Offline options={options} updateView={this.updateView} />
+
+        <OnlineStatus>{onlineStatus ? "Online" : "Offline"}</OnlineStatus>
 
         <Controls
           selected={sortMode}

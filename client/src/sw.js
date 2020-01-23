@@ -42,7 +42,7 @@ if ("function" === typeof importScripts) {
     workbox.routing.registerRoute(
       /https:\/\/i.scdn.co\/image\/.+/,
       new workbox.strategies.CacheFirst({
-        cacheName: "albums"
+        cacheName: "album-covers"
       })
     );
   } else {
