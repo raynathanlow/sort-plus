@@ -8,8 +8,6 @@ import Offline from "./Offline";
 import Controls from "./Controls";
 import AlbumPlaceholder from "./AlbumPlaceholder";
 
-import { getCookie } from "../Utils.js";
-
 const LibraryH1 = styled.h1`
   position: sticky;
   top: 0;
@@ -141,8 +139,6 @@ class Library extends Component {
           options={options[sortMode]}
           onChangeOption={this.updateOption}
         />
-
-        <div>loggedIn: {getCookie("loggedIn")}</div>
       </div>
     );
   }

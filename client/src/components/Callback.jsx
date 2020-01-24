@@ -33,7 +33,9 @@ class Callback extends Component {
           code
         }
       }).then(() => {
-        document.cookie = `loggedIn=true; max-age="${60 * 60 * 24 * 30}"`;
+        console.log("Setting session cookie");
+
+        document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 30}`;
         window.opener.postMessage("TEST MESSAGE", constants.TARGET_ORIGIN);
       });
     }

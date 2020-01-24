@@ -89,8 +89,6 @@ function Home() {
           Login
         </ButtonA>
       </ButtonDiv>
-
-      <div>loggedIn: {getCookie("loggedIn")}</div>
     </HomeDiv>
   );
 }
