@@ -9,73 +9,60 @@ const tabs = 300; // pixel breakpoint to show tabs
 const ControlsDiv = styled.div`
   position: fixed;
   display: flex;
-  flex-direction: column;
-  background-color: #282828;
+  flex-direction: row;
   bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  width: 100%;
+  justify-content: center;
 
-  @media (min-width: ${tabs}px) {
-    flex-direction: row;
-  }
-
-  @media ((min-width: ${tabs}px) and (max-height: ${tabs}px)) {
-    justify-content: center;
-    margin: 0 auto;
-  }
-
-  @media (min-height: ${tabs}px) {
+  @media (min-height: ${225}px) {
     justify-content: space-between;
+    background-color: #282828;
   }
 
-  @media((min-width: 725px) and (min-height: 200px)) {
-    width: 35em;
-    margin: 0 auto;
+  @media (min-width: 600px) {
+    width: 38em;
+  }
+
+  @media (min-width: 600px) and (min-height: 270px) {
     padding: 1em;
   }
 `;
 
 const TabsDiv = styled.div`
   display: none;
-  @media ((min-width: ${tabs}px) and (min-height: ${tabs}px)) {
+
+  @media (min-width: ${200}px) and (min-height: ${225}px) {
     display: flex;
     flex: 0 1 60%;
-  }
-
-  @media(min-width: 400px) {
-    flex: 0 1 75%;
   }
 `;
 
 const SortDiv = styled.div`
-  @media ((min-width: ${tabs}px) and (min-height: ${tabs}px)) {
+  @media (min-width: ${200}px) and (min-height: ${225}px) {
     display: none;
   }
 `;
 
 const OptionsDiv = styled.div`
-  @media (min-width: ${tabs}px) {
+  @media (min-width: ${185}px) {
     display: flex;
     flex-direction: column;
     justify-content: center;
     margin-left: 0.5em;
   }
 
-  @media ((min-width: ${tabs}px) and (min-height: ${tabs}px)) {
+  @media (min-width: ${200}px) and (min-height: ${225}px) {
     flex: 0 1 40%;
-    margin: 0.5em; 
-  }
-
-  @media(min-width: 400px) {
-    flex: 0 1 25%;
+    margin: 0.5em;
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 0.25em;
-  margin-top: 0.5em;
 
   @media (min-width: ${tabs}px) {
     padding: 0.5em;

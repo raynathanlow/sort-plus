@@ -7,7 +7,7 @@ const TabsDiv = styled.div`
   flex-direction: column;
   width: 100%;
 
-  @media (min-width: 400px) {
+  @media (min-width: 420px) {
     flex-direction: row;
   }
 `;
