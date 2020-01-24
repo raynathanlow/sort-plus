@@ -2,6 +2,15 @@ import React, { Component } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import styled from "styled-components";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSync,
+  faExclamationCircle,
+  faCloudDownloadAlt
+} from "@fortawesome/free-solid-svg-icons";
+import offlinePin from "../offline-pin.svg";
 
 const Button = styled.button`
   background-color: green;
@@ -23,16 +32,19 @@ class Offline extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      caching: false,
+      isDownloading: false,
+      isUpdating: true,
+      error: false,
+      updateAvailable: false,
       albums: {},
-      progress: 0,
-      failed: [],
-      readyToDownload: false
+      progress: 0
     };
   }
 
   componentDidMount() {
     const { updateView } = this.props;
+
+    const { updateAvailable } = this.state;
 
     axios.get("/api/library/update").then(() => {
       console.log("Library updated!");
@@ -50,8 +62,7 @@ class Offline extends Component {
           console.log(response);
 
           this.setState({
-            albums: response.data,
-            readyToDownload: true
+            albums: response.data
           });
 
           const albumIds = [];
@@ -62,22 +73,29 @@ class Offline extends Component {
 
           const cacheKeys = [];
 
-          // TODO: Also need to check if options and album covers are up-to-date
-          // Get the albumIds from /albums, get the albumIds from album-list keys using regex
-          caches.open("albums").then(function(cache) {
-            cache.keys().then(function(keys) {
-              keys.forEach(function(request) {
+          // Get cached albumIds
+          caches.open("albums").then(cache => {
+            cache.keys().then(keys => {
+              keys.forEach(request => {
                 // Process cacheKeys so that only the id is pushed into array
                 const equalSignIndex = request.url.indexOf("=");
 
                 cacheKeys.push(request.url.slice(equalSignIndex + 1));
               });
 
-              // Compare the albumIds
+              // If updated albumIds and cached albumIds don't match
               if (!checkArraysEqual(albumIds.sort(), cacheKeys.sort())) {
-                console.log("Update required!");
+                // Cache can be updated
+                if (!updateAvailable) {
+                  this.setState({
+                    updateAvailable: true,
+                    isUpdating: false
+                  });
+                }
               } else {
-                console.log("Up to date!");
+                this.setState({
+                  isUpdating: false
+                });
               }
             });
           });
@@ -118,20 +136,27 @@ class Offline extends Component {
           });
 
           // Get album-lists cache's keys
-          caches.open("album-lists").then(function(cache) {
-            cache.keys().then(function(keys) {
-              keys.forEach(function(request) {
+          caches.open("album-lists").then(cache => {
+            cache.keys().then(keys => {
+              keys.forEach(request => {
                 cachedAlbumLists.push(request.url);
               });
 
-              // Compare the albumIds
-              // Notify if there is discrepancy between the new album lists and its cached version
+              // If new album lists and its cached version are not the same
               if (
                 !checkArraysEqual(newAlbumLists.sort(), cachedAlbumLists.sort())
               ) {
-                console.log("Update required! - album-lists");
+                // Cache can be updated
+                if (!updateAvailable) {
+                  this.setState({
+                    updateAvailable: true,
+                    isUpdating: false
+                  });
+                }
               } else {
-                console.log("Up to date! - album-lists");
+                this.setState({
+                  isUpdating: false
+                });
               }
             });
           });
@@ -142,16 +167,18 @@ class Offline extends Component {
 
   cache = () => {
     this.setState({
-      caching: true,
-      progress: 0
+      isDownloading: true,
+      progress: 0,
+      updateAvailable: false
     });
 
     const { options } = this.props;
 
     const { albums } = this.state;
 
-    // axios.get(`${window.location.origin}/api/library/albums`).then(response => {
     const savedAlbums = albums;
+
+    console.log("savedAlbums", savedAlbums);
 
     // Compile array of requests
     const requests = [];
@@ -184,8 +211,6 @@ class Offline extends Component {
     let successful = 0;
     const total = requests.length;
 
-    let failed = [];
-
     // Go through array requests and request for them all
     axios
       .all(
@@ -201,49 +226,51 @@ class Offline extends Component {
               }
             })
             .catch(error => {
-              failed.push(request);
               this.setState({
-                failed
+                error: true
               });
             })
         )
       )
       .finally(() => {
-        // console.log(failed);
         this.setState({
-          caching: false
+          isDownloading: false
         });
       });
     // });
   };
 
   render() {
-    const { caching, progress, failed, readyToDownload } = this.state;
+    const {
+      isDownloading,
+      isUpdating,
+      progress,
+      error,
+      updateAvailable
+    } = this.state;
 
     if ("caches" in window) {
-      if (!caching && readyToDownload) {
-        // Render a button that when clicked, will call the cache function
+      if (isDownloading && !isUpdating) {
         return (
-          <div>
-            <Button type="button" onClick={this.cache}>
-              Offline
-            </Button>
-            <div>Progress: {Math.trunc(progress * 100)}%</div>
-            <div>Failed: {failed}</div>
-          </div>
+          <CircularProgressbar
+            value={Math.trunc(progress * 100)}
+            text={`${Math.trunc(progress * 100)}%`}
+          />
         );
       }
 
-      if (caching) {
+      if (!isDownloading && !isUpdating && !updateAvailable) {
+        return <img src={offlinePin} alt="offline pin" />;
+      }
+
+      if (updateAvailable) {
         return (
-          <div>
-            <ButtonCaching type="button" disabled={true}>
-              Caching
-            </ButtonCaching>
-            <div>Progress: {Math.trunc(progress * 100)}%</div>
-            <div>Failed: {failed}</div>
-          </div>
+          <FontAwesomeIcon icon={faCloudDownloadAlt} onClick={this.cache} />
         );
+      }
+
+      if (isUpdating) {
+        return <FontAwesomeIcon icon={faSync} spin />;
       }
     }
 
