@@ -8,6 +8,8 @@ import Offline from "./Offline";
 import Controls from "./Controls";
 import AlbumPlaceholder from "./AlbumPlaceholder";
 
+import { getCookie } from "../Utils.js";
+
 const LibraryH1 = styled.h1`
   position: sticky;
   top: 0;
@@ -52,14 +54,11 @@ class Library extends Component {
       options: {
         duration: [],
         releaseYear: []
-      },
-      onlineStatus: false
+      }
     };
   }
 
   componentDidMount() {
-    // Check Internet connection and then update onlineStatus state
-    this.checkOnline();
     this.updateView();
   }
 
@@ -117,24 +116,8 @@ class Library extends Component {
       });
   };
 
-  checkOnline = () => {
-    axios.get("google.com").then(response => {
-      if (response.status === 200) {
-        this.setState({
-          onlineStatus: true
-        });
-      }
-    });
-  };
-
   render() {
-    const {
-      sortMode,
-      albumIds,
-      options,
-      selectedOption,
-      onlineStatus
-    } = this.state;
+    const { sortMode, albumIds, options, selectedOption } = this.state;
 
     return (
       <div>
@@ -151,8 +134,6 @@ class Library extends Component {
 
         <Offline options={options} updateView={this.updateView} />
 
-        <OnlineStatus>{onlineStatus ? "Online" : "Offline"}</OnlineStatus>
-
         <Controls
           selected={sortMode}
           value={selectedOption}
@@ -160,6 +141,8 @@ class Library extends Component {
           options={options[sortMode]}
           onChangeOption={this.updateOption}
         />
+
+        <div>loggedIn: {getCookie("loggedIn")}</div>
       </div>
     );
   }
