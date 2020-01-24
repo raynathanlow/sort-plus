@@ -57,110 +57,118 @@ class Offline extends Component {
         // Request /albums
         console.log("Checking if cache needs updating...");
 
-        // Compare albumIds in User document with cached version of album data
-        axios.get("/api/library/albums").then(response => {
-          console.log(response);
+        // Promise.all for /albums and /options
+        axios
+          .all([
+            axios.get("/api/library/albums"),
+            axios.get("/api/library/options")
+          ])
+          .then(response => {
+            // Store savedAlbum IDs
+            const albumsRes = response[0].data;
 
-          this.setState({
-            albums: response.data
-          });
+            this.setState({
+              albums: albumsRes
+            });
 
-          const albumIds = [];
+            const albumIds = [];
 
-          response.data.savedAlbums.forEach(savedAlbum => {
-            albumIds.push(savedAlbum.id);
-          });
+            albumsRes.savedAlbums.forEach(savedAlbum => {
+              albumIds.push(savedAlbum.id);
+            });
 
-          const cacheKeys = [];
+            // Store album lists
+            const optionsRes = response[1].data;
 
-          // Get cached albumIds
-          caches.open("albums").then(cache => {
-            cache.keys().then(keys => {
-              keys.forEach(request => {
-                // Process cacheKeys so that only the id is pushed into array
-                const equalSignIndex = request.url.indexOf("=");
+            const albumLists = [];
 
-                cacheKeys.push(request.url.slice(equalSignIndex + 1));
-              });
+            // Put all options per sort mode into an array
+            // For each option, replace the spaces with %20 to match the cached album lists
+            optionsRes.duration.forEach(durationOption => {
+              albumLists.push(
+                `${
+                  window.location.origin
+                }/api/library?sortMode=duration&option=${durationOption.replace(
+                  / /g,
+                  "%20"
+                )}`
+              );
+            });
 
-              // If updated albumIds and cached albumIds don't match
-              if (!checkArraysEqual(albumIds.sort(), cacheKeys.sort())) {
-                // Cache can be updated
-                if (!updateAvailable) {
-                  this.setState({
-                    updateAvailable: true,
-                    isUpdating: false
+            optionsRes.releaseYear.forEach(yearOption => {
+              yearOption.replace(/ /g, "%20");
+              albumLists.push(
+                `${
+                  window.location.origin
+                }/api/library?sortMode=releaseYear&option=${yearOption.replace(
+                  / /g,
+                  "%20"
+                )}`
+              );
+            });
+
+            // Get cached album IDs and album lists
+            Promise.all([
+              caches.open("albums"),
+              caches.open("album-lists")
+            ]).then(values => {
+              const albumIdsCache = values[0];
+              const albumListsCache = values[1];
+
+              const cachedAlbumIds = [];
+              const cachedAlbumLists = [];
+
+              Promise.all([albumIdsCache.keys(), albumListsCache.keys()]).then(
+                keys => {
+                  const albumIdsCacheKeys = keys[0];
+                  const albumListsCacheKeys = keys[1];
+
+                  albumIdsCacheKeys.forEach(request => {
+                    // Process cacheKeys so that only the id is pushed into array
+                    const equalSignIndex = request.url.indexOf("=");
+                    cachedAlbumIds.push(request.url.slice(equalSignIndex + 1));
                   });
+
+                  albumListsCacheKeys.forEach(request => {
+                    cachedAlbumLists.push(request.url);
+                  });
+
+                  // Determine if cache update is available or not
+
+                  // If there are discrepancies between the updated and cached versions,
+                  // then update is available
+                  if (
+                    !checkArraysEqual(albumIds.sort(), cachedAlbumIds.sort()) ||
+                    !checkArraysEqual(
+                      albumLists.sort(),
+                      cachedAlbumLists.sort()
+                    )
+                  ) {
+                    this.setState({
+                      isUpdating: false,
+                      updateAvailable: true
+                    });
+
+                    console.log("Update available!");
+                  }
+
+                  // If there are no discrepancies between updated and cached versions,
+                  // then no update is available
+                  if (
+                    checkArraysEqual(albumIds.sort(), cachedAlbumIds.sort()) ||
+                    checkArraysEqual(albumLists.sort(), cachedAlbumLists.sort())
+                  ) {
+                    this.setState({
+                      isUpdating: false,
+                      updateAvailable: false
+                    });
+
+                    console.log("No update necessary!");
+                  }
                 }
-              } else {
-                this.setState({
-                  isUpdating: false
-                });
-              }
+              );
             });
           });
-        });
-
-        // Get options
-        axios.get("/api/library/options").then(response => {
-          const options = response.data;
-
-          // Create array of requests for each option per sort mode
-          const newAlbumLists = [];
-
-          const cachedAlbumLists = [];
-
-          // Put all options per sort mode into an array
-          // For each option, replace the spaces with %20 to match the cached album lists
-          options.duration.forEach(durationOption => {
-            newAlbumLists.push(
-              `${
-                window.location.origin
-              }/api/library?sortMode=duration&option=${durationOption.replace(
-                / /g,
-                "%20"
-              )}`
-            );
-          });
-
-          options.releaseYear.forEach(yearOption => {
-            yearOption.replace(/ /g, "%20");
-            newAlbumLists.push(
-              `${
-                window.location.origin
-              }/api/library?sortMode=releaseYear&option=${yearOption.replace(
-                / /g,
-                "%20"
-              )}`
-            );
-          });
-
-          // Get album-lists cache's keys
-          caches.open("album-lists").then(cache => {
-            cache.keys().then(keys => {
-              keys.forEach(request => {
-                cachedAlbumLists.push(request.url);
-              });
-
-              // If new album lists and its cached version are not the same
-              if (
-                !checkArraysEqual(newAlbumLists.sort(), cachedAlbumLists.sort())
-              ) {
-                // Cache can be updated
-                if (!updateAvailable) {
-                  this.setState({
-                    updateAvailable: true,
-                    isUpdating: false
-                  });
-                }
-              } else {
-                this.setState({
-                  isUpdating: false
-                });
-              }
-            });
-          });
-        });
       }
     });
   }
