@@ -15,6 +15,7 @@ const LibraryH1 = styled.h1`
   color: white;
   background-color: #111114;
   margin: 0;
+  padding-top: 0.25em;
   padding-bottom: 0.25em;
   font-size: 1.75em;
   z-index: 15;
@@ -32,10 +33,6 @@ const AlbumsUl = styled.ul`
     display: flex;
     flex-wrap: wrap;
   }
-`;
-
-const OnlineStatus = styled.div`
-  color: white;
 `;
 
 // Defaults
