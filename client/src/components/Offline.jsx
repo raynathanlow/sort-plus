@@ -267,7 +267,7 @@ class Offline extends Component {
       if (isDownloading && !isUpdating) {
         return (
           <OfflineDiv>
-            <IconDiv>
+            <ProgressDiv>
               <CircularProgressbar
                 value={Math.trunc(progress * 100)}
                 strokeWidth={15}
@@ -276,7 +276,7 @@ class Offline extends Component {
                   trailColor: "#ffffff"
                 })}
               />
-            </IconDiv>
+            </ProgressDiv>
           </OfflineDiv>
         );
       }
