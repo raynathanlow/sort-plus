@@ -29,6 +29,14 @@ const AlbumsUl = styled.ul`
   list-style-type: none;
   padding: 0 0.5em;
 
+  @media (min-width: 200px) and (min-height: 225px) {
+    margin-bottom: 6em;
+  }
+
+  @media (min-width: 420px) and (min-height: 225px) {
+    margin-bottom: 4em;
+  }
+
   @media (min-width: 500px) {
     display: flex;
     flex-wrap: wrap;

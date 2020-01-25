@@ -4,8 +4,6 @@ import PropTypes from "prop-types";
 
 import Tabs from "./Tabs";
 
-const tabs = 300; // pixel breakpoint to show tabs
-
 const ControlsDiv = styled.div`
   position: fixed;
   display: flex;
@@ -17,15 +15,17 @@ const ControlsDiv = styled.div`
   width: 100%;
   justify-content: center;
 
-  @media (min-height: ${225}px) {
+  @media (min-height: 225px) {
     justify-content: space-between;
     background-color: #282828;
   }
 
+  // Fix width of Controls
   @media (min-width: 600px) {
     width: 38em;
   }
 
+  // Increase padding of Controls
   @media (min-width: 600px) and (min-height: 270px) {
     padding: 1em;
   }
@@ -34,27 +34,32 @@ const ControlsDiv = styled.div`
 const TabsDiv = styled.div`
   display: none;
 
-  @media (min-width: ${200}px) and (min-height: ${225}px) {
+  // Show Tabs
+  @media (min-width: 200px) and (min-height: 225px) {
     display: flex;
     flex: 0 1 60%;
   }
 `;
 
 const SortDiv = styled.div`
-  @media (min-width: ${200}px) and (min-height: ${225}px) {
+  // Hide sortMode select element
+  @media (min-width: 200px) and (min-height: 225px) {
     display: none;
   }
 `;
 
 const OptionsDiv = styled.div`
-  @media (min-width: ${185}px) {
+  @media (min-width: 185px) {
+    // Vertically center options select element
     display: flex;
     flex-direction: column;
     justify-content: center;
     margin-left: 0.5em;
   }
 
-  @media (min-width: ${200}px) and (min-height: ${225}px) {
+  // Limit size of options select element to 40%
+  // Add margin all around element
+  @media (min-width: 200px) and (min-height: 225px) {
     flex: 0 1 40%;
     margin: 0.5em;
   }
@@ -64,7 +69,7 @@ const Select = styled.select`
   width: 100%;
   padding: 0.25em;
 
-  @media (min-width: ${tabs}px) {
+  @media (min-width: 300px) {
     padding: 0.5em;
     margin-top: 0em;
   }
