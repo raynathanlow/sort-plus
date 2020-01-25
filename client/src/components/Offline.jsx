@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import styled from "styled-components";
-import { CircularProgressbar } from "react-circular-progressbar";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -12,12 +12,26 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import offlinePin from "../offline-pin.svg";
 
-const Button = styled.button`
-  background-color: green;
+const OfflineDiv = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 15;
 `;
 
-const ButtonCaching = styled.button`
-  background-color: red;
+const IconDiv = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+
+  & img {
+    width: 1.7em;
+  }
+`;
+
+const ProgressDiv = styled.div`
+  width: 1.5em;
 `;
 
 function checkArraysEqual(arr1, arr2) {
@@ -43,8 +57,6 @@ class Offline extends Component {
 
   componentDidMount() {
     const { updateView } = this.props;
-
-    const { updateAvailable } = this.state;
 
     axios.get("/api/library/update").then(() => {
       console.log("Library updated!");
@@ -249,36 +261,59 @@ class Offline extends Component {
   };
 
   render() {
-    const {
-      isDownloading,
-      isUpdating,
-      progress,
-      error,
-      updateAvailable
-    } = this.state;
+    const { isDownloading, isUpdating, progress, updateAvailable } = this.state;
 
     if ("caches" in window) {
       if (isDownloading && !isUpdating) {
         return (
-          <CircularProgressbar
-            value={Math.trunc(progress * 100)}
-            text={`${Math.trunc(progress * 100)}%`}
-          />
+          <OfflineDiv>
+            <IconDiv>
+              <CircularProgressbar
+                value={Math.trunc(progress * 100)}
+                strokeWidth={15}
+                styles={buildStyles({
+                  pathColor: "#1db954",
+                  trailColor: "#ffffff"
+                })}
+              />
+            </IconDiv>
+          </OfflineDiv>
         );
       }
 
       if (!isDownloading && !isUpdating && !updateAvailable) {
-        return <img src={offlinePin} alt="offline pin" />;
+        return (
+          <OfflineDiv>
+            <IconDiv>
+              <img src={offlinePin} alt="offline pin" />
+            </IconDiv>
+          </OfflineDiv>
+        );
       }
 
       if (updateAvailable) {
         return (
-          <FontAwesomeIcon icon={faCloudDownloadAlt} onClick={this.cache} />
+          <OfflineDiv>
+            <IconDiv>
+              <FontAwesomeIcon
+                icon={faCloudDownloadAlt}
+                size="lg"
+                onClick={this.cache}
+                style={{ cursor: "pointer" }}
+              />
+            </IconDiv>
+          </OfflineDiv>
         );
       }
 
       if (isUpdating) {
-        return <FontAwesomeIcon icon={faSync} spin />;
+        return (
+          <OfflineDiv>
+            <IconDiv>
+              <FontAwesomeIcon icon={faSync} size="lg" spin />
+            </IconDiv>
+          </OfflineDiv>
+        );
       }
     }
 
