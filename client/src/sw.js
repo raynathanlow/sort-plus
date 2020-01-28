@@ -38,11 +38,19 @@ if ("function" === typeof importScripts) {
       })
     );
 
-    // Not sure if this is necessary? Might be redundant...
+    // album covers
     workbox.routing.registerRoute(
       /https:\/\/i.scdn.co\/image\/.+/,
       new workbox.strategies.CacheFirst({
         cacheName: "album-covers"
+      })
+    );
+
+    // icons
+    workbox.routing.registerRoute(
+      /(\w+)\.(svg)$/,
+      new workbox.strategies.CacheFirst({
+        cacheName: "icons"
       })
     );
   } else {

@@ -387,8 +387,6 @@ router.get("/albums", (req, res) => {
         savedAlbumCovers: user.savedAlbumCovers
       };
 
-      console.log(response);
-
       res.send(response);
     })
     .catch(error => res.send(error));
@@ -397,24 +395,9 @@ router.get("/albums", (req, res) => {
 router.get("/update", (req, res) => {
   getAccessToken(req).then(accessToken => {
     updateLibrary(accessToken, req.session.user).then(() => {
+      // Extend session when library updates
+
       res.send("Library updated!");
-      // User.findOne(
-      //   { spotifyId: req.session.user },
-      //   "sortedByDuration sortedByReleaseYear"
-      // )
-      //   .lean()
-      //   .then(user => {
-      //     // TODO: sortedBy query parameter
-      //     const response = {
-      //       albumIds: user.sortedByDuration["3 m"],
-      //       options: {
-      //         duration: Object.keys(user.sortedByDuration),
-      //         releaseYear: Object.keys(user.sortedByReleaseYear)
-      //       }
-      //     };
-      //     res.send(response);
-      //   })
-      //   .catch(error => res.send(error));
     });
   });
 });
