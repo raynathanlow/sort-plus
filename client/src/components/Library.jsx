@@ -66,6 +66,8 @@ class Library extends Component {
   }
 
   updateView = () => {
+    document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
+
     axios.get("/api/library/options").then(response => {
       const options = response.data;
 
@@ -93,6 +95,8 @@ class Library extends Component {
         sortMode: e.target.value
       });
 
+      document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
+
       axios
         .get(`/api/library?sortMode=${e.target.value}&option=${firstOption}`)
         .then(response => {
@@ -108,6 +112,8 @@ class Library extends Component {
     const { sortMode } = this.state;
 
     const selectedOption = e.target.value;
+
+    document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
     axios
       .get(`/api/library?sortMode=${sortMode}&option=${selectedOption}`)

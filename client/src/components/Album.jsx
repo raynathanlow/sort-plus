@@ -122,6 +122,8 @@ class Album extends Component {
   }
 
   componentDidMount() {
+    document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
+
     const { albumId } = this.props;
 
     axios

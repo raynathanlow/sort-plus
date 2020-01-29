@@ -43,12 +43,13 @@ const store = new MongoStore({ mongooseConnection: connection });
 const sess = {
   name: "id",
   secret: process.env.SESSION_SECRET,
+  rolling: true,
   resave: false, // Forces session to be saved back to the session store
   saveUninitialized: false, // Forces 'uninitialized' session to be saved to the store
   cookie: {
     httpOnly: true,
     sameSite: "strict",
-    maxAge: 2592000000 // 30 days in milliseconds
+    maxAge: 7776000000 // 90 days in milliseconds
   },
   store
 };
