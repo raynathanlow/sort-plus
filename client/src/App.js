@@ -12,7 +12,7 @@ import { getCookie } from "./Utils";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Callback from "./components/Callback";
-import Library from "./components/Library";
+import Main from "./components/Main";
 
 function App() {
   return (
@@ -29,7 +29,7 @@ function App() {
             <Callback />
           </Route>
           <PrivateRoute path="/library">
-            <Library />
+            <Main />
           </PrivateRoute>
         </Switch>
       </div>

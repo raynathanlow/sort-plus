@@ -4,7 +4,6 @@ import styled from "styled-components";
 import LazyLoad from "react-lazyload";
 
 import Album from "./Album";
-import Offline from "./Offline";
 import Controls from "./Controls";
 import AlbumPlaceholder from "./AlbumPlaceholder";
 
@@ -140,8 +139,6 @@ class Library extends Component {
             );
           })}
         </AlbumsUl>
-
-        <Offline options={options} updateView={this.updateView} />
 
         <Controls
           selected={sortMode}

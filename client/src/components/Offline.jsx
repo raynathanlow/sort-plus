@@ -48,187 +48,128 @@ class Offline extends Component {
     super(props);
     this.state = {
       isDownloading: false,
-      isUpdating: true,
-      error: false,
       updateAvailable: false,
       albums: {},
       progress: 0,
-      isOnline: true
+      isSyncing: true
     };
   }
 
   componentDidMount() {
-    const { updateView } = this.props;
-
     if ("caches" in window) {
       // Cache wifi off icon
       axios.get(wifiOff);
     }
+  }
 
-    axios
-      .get(`google.com?_t=${Math.trunc(Math.random() * 10000)}`)
-      .then(response => {
-        if (response.status === 200) {
-          // Connected to Internet
-          console.log("connected!");
+  componentDidUpdate(prevProps) {
+    const { updateAvailable } = this.state;
+    const { isUpdating } = this.props;
 
+    if (
+      "caches" in window &&
+      prevProps.isUpdating &&
+      !isUpdating &&
+      !updateAvailable
+    ) {
+      // Determine whether or not the user needs to update their offline version
+      // Request /albums
+      console.log("Checking if cache needs updating...");
+
+      axios
+        .all([
+          axios.get("/api/library/albums"),
+          axios.get("/api/library/options")
+        ])
+        .then(response => {
+          // Store savedAlbum IDs
+          const albumsRes = response[0].data;
           this.setState({
-            isUpdating: true,
-            isOnline: true
+            albums: albumsRes
           });
-
-          axios.get("/api/library/update").then(() => {
-            console.log("Library updated!");
-
-            updateView();
-
-            if ("caches" in window) {
-              // Determine whether or not the user needs to update their offline version
-
-              // Request /albums
-              console.log("Checking if cache needs updating...");
-
-              // Promise.all for /albums and /options
-              axios
-                .all([
-                  axios.get("/api/library/albums"),
-                  axios.get("/api/library/options")
-                ])
-                .then(response => {
-                  // Store savedAlbum IDs
-                  const albumsRes = response[0].data;
-
-                  this.setState({
-                    albums: albumsRes
+          const albumIds = [];
+          albumsRes.savedAlbums.forEach(savedAlbum => {
+            albumIds.push(savedAlbum.id);
+          });
+          // Store album lists
+          const optionsRes = response[1].data;
+          const albumLists = [];
+          // Put all options per sort mode into an array
+          // For each option, replace the spaces with %20 to match the cached album lists
+          optionsRes.duration.forEach(durationOption => {
+            albumLists.push(
+              `${
+                window.location.origin
+              }/api/library?sortMode=duration&option=${durationOption.replace(
+                / /g,
+                "%20"
+              )}`
+            );
+          });
+          optionsRes.releaseYear.forEach(yearOption => {
+            yearOption.replace(/ /g, "%20");
+            albumLists.push(
+              `${
+                window.location.origin
+              }/api/library?sortMode=releaseYear&option=${yearOption.replace(
+                / /g,
+                "%20"
+              )}`
+            );
+          });
+          // Get cached album IDs and album lists
+          Promise.all([caches.open("albums"), caches.open("album-lists")]).then(
+            values => {
+              const albumIdsCache = values[0];
+              const albumListsCache = values[1];
+              const cachedAlbumIds = [];
+              const cachedAlbumLists = [];
+              Promise.all([albumIdsCache.keys(), albumListsCache.keys()]).then(
+                keys => {
+                  const albumIdsCacheKeys = keys[0];
+                  const albumListsCacheKeys = keys[1];
+                  albumIdsCacheKeys.forEach(request => {
+                    // Process cacheKeys so that only the id is pushed into array
+                    const equalSignIndex = request.url.indexOf("=");
+                    cachedAlbumIds.push(request.url.slice(equalSignIndex + 1));
                   });
-
-                  const albumIds = [];
-
-                  albumsRes.savedAlbums.forEach(savedAlbum => {
-                    albumIds.push(savedAlbum.id);
+                  albumListsCacheKeys.forEach(request => {
+                    cachedAlbumLists.push(request.url);
                   });
-
-                  // Store album lists
-                  const optionsRes = response[1].data;
-
-                  const albumLists = [];
-
-                  // Put all options per sort mode into an array
-                  // For each option, replace the spaces with %20 to match the cached album lists
-                  optionsRes.duration.forEach(durationOption => {
-                    albumLists.push(
-                      `${
-                        window.location.origin
-                      }/api/library?sortMode=duration&option=${durationOption.replace(
-                        / /g,
-                        "%20"
-                      )}`
-                    );
-                  });
-
-                  optionsRes.releaseYear.forEach(yearOption => {
-                    yearOption.replace(/ /g, "%20");
-                    albumLists.push(
-                      `${
-                        window.location.origin
-                      }/api/library?sortMode=releaseYear&option=${yearOption.replace(
-                        / /g,
-                        "%20"
-                      )}`
-                    );
-                  });
-
-                  // Get cached album IDs and album lists
-                  Promise.all([
-                    caches.open("albums"),
-                    caches.open("album-lists")
-                  ]).then(values => {
-                    const albumIdsCache = values[0];
-                    const albumListsCache = values[1];
-
-                    const cachedAlbumIds = [];
-                    const cachedAlbumLists = [];
-
-                    Promise.all([
-                      albumIdsCache.keys(),
-                      albumListsCache.keys()
-                    ]).then(keys => {
-                      const albumIdsCacheKeys = keys[0];
-                      const albumListsCacheKeys = keys[1];
-
-                      albumIdsCacheKeys.forEach(request => {
-                        // Process cacheKeys so that only the id is pushed into array
-                        const equalSignIndex = request.url.indexOf("=");
-                        cachedAlbumIds.push(
-                          request.url.slice(equalSignIndex + 1)
-                        );
-                      });
-
-                      albumListsCacheKeys.forEach(request => {
-                        cachedAlbumLists.push(request.url);
-                      });
-
-                      // Determine if cache update is available or not
-
-                      // If there are discrepancies between the updated and cached versions,
-                      // then update is available
-                      if (
-                        !checkArraysEqual(
-                          albumIds.sort(),
-                          cachedAlbumIds.sort()
-                        ) ||
-                        !checkArraysEqual(
-                          albumLists.sort(),
-                          cachedAlbumLists.sort()
-                        )
-                      ) {
-                        this.setState({
-                          isUpdating: false,
-                          updateAvailable: true
-                        });
-
-                        console.log("Update available!");
-                      }
-
-                      // If there are no discrepancies between updated and cached versions,
-                      // then no update is available
-                      if (
-                        checkArraysEqual(
-                          albumIds.sort(),
-                          cachedAlbumIds.sort()
-                        ) ||
-                        checkArraysEqual(
-                          albumLists.sort(),
-                          cachedAlbumLists.sort()
-                        )
-                      ) {
-                        this.setState({
-                          isUpdating: false,
-                          updateAvailable: false
-                        });
-
-                        console.log("No update necessary!");
-                      }
+                  // Determine if cache update is available or not
+                  // If there are discrepancies between the updated and cached versions,
+                  // then update is available
+                  if (
+                    !checkArraysEqual(albumIds.sort(), cachedAlbumIds.sort()) ||
+                    !checkArraysEqual(
+                      albumLists.sort(),
+                      cachedAlbumLists.sort()
+                    )
+                  ) {
+                    this.setState({
+                      updateAvailable: true,
+                      isSyncing: false
                     });
-                  });
-                });
+                    console.log("Update available!");
+                  }
+                  // If there are no discrepancies between updated and cached versions,
+                  // then no update is available
+                  if (
+                    checkArraysEqual(albumIds.sort(), cachedAlbumIds.sort()) ||
+                    checkArraysEqual(albumLists.sort(), cachedAlbumLists.sort())
+                  ) {
+                    this.setState({
+                      updateAvailable: false,
+                      isSyncing: false
+                    });
+                    console.log("No update necessary!");
+                  }
+                }
+              );
             }
-          });
-        } else {
-          console.log("Not connected!");
-
-          this.setState({
-            isOnline: false
-          });
-        }
-      })
-      .catch(error => {
-        console.log("Not connected !");
-
-        this.setState({
-          isOnline: false
+          );
         });
-      });
+    }
   }
 
   cache = () => {
@@ -307,13 +248,9 @@ class Offline extends Component {
   };
 
   render() {
-    const {
-      isDownloading,
-      isUpdating,
-      isOnline,
-      progress,
-      updateAvailable
-    } = this.state;
+    const { isDownloading, progress, updateAvailable, isSyncing } = this.state;
+
+    const { isUpdating, isOnline } = this.props;
 
     if ("caches" in window) {
       if (isDownloading && !isUpdating && isOnline) {
@@ -333,7 +270,13 @@ class Offline extends Component {
         );
       }
 
-      if (!isDownloading && !isUpdating && !updateAvailable && isOnline) {
+      if (
+        !isDownloading &&
+        !isUpdating &&
+        !updateAvailable &&
+        isOnline &&
+        !isSyncing
+      ) {
         return (
           <OfflineDiv>
             <IconDiv>
@@ -358,7 +301,7 @@ class Offline extends Component {
         );
       }
 
-      if (isUpdating && isOnline) {
+      if ((isUpdating || isSyncing) && isOnline) {
         return (
           <OfflineDiv>
             <IconDiv>
@@ -367,19 +310,19 @@ class Offline extends Component {
           </OfflineDiv>
         );
       }
+
+      if (!isOnline) {
+        return (
+          <OfflineDiv>
+            <IconDiv>
+              <img src={wifiOff} alt="wifi off" />
+            </IconDiv>
+          </OfflineDiv>
+        );
+      }
     }
 
-    if (!isOnline) {
-      return (
-        <OfflineDiv>
-          <IconDiv>
-            <img src={wifiOff} alt="wifi off" />
-          </IconDiv>
-        </OfflineDiv>
-      );
-    }
-
-    return <div></div>;
+    return <div />;
   }
 }
 
@@ -388,7 +331,8 @@ Offline.propTypes = {
     duration: PropTypes.arrayOf(PropTypes.string).isRequired,
     releaseYear: PropTypes.arrayOf(PropTypes.string).isRequired
   }),
-  updateView: PropTypes.func.isRequired
+  isUpdating: PropTypes.bool.isRequired,
+  isOnline: PropTypes.bool.isRequired
 };
 
 export default Offline;
