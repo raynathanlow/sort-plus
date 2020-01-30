@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import axios from "axios";
 import styled from "styled-components";
 import LazyLoad from "react-lazyload";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
 import Album from "./Album";
 import Controls from "./Controls";
@@ -42,6 +44,14 @@ const AlbumsUl = styled.ul`
   }
 `;
 
+const IconDiv = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+`;
+
 // Defaults
 const defaultSortMode = "duration";
 const defaultOption = "1 m";
@@ -56,7 +66,8 @@ class Library extends Component {
       options: {
         duration: [],
         releaseYear: []
-      }
+      },
+      isRequesting: false
     };
   }
 
@@ -91,7 +102,8 @@ class Library extends Component {
       const firstOption = options[e.target.value][0];
 
       this.setState({
-        sortMode: e.target.value
+        sortMode: e.target.value,
+        isRequesting: true
       });
 
       document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
@@ -101,7 +113,8 @@ class Library extends Component {
         .then(response => {
           this.setState({
             albumIds: response.data,
-            selectedOption: firstOption
+            selectedOption: firstOption,
+            isRequesting: false
           });
         });
     }
@@ -112,6 +125,11 @@ class Library extends Component {
 
     const selectedOption = e.target.value;
 
+    this.setState({
+      isRequesting: true,
+      selectedOption
+    });
+
     document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
     axios
@@ -119,13 +137,39 @@ class Library extends Component {
       .then(response => {
         this.setState({
           albumIds: response.data,
-          selectedOption
+          selectedOption,
+          isRequesting: false
         });
       });
   };
 
   render() {
-    const { sortMode, albumIds, options, selectedOption } = this.state;
+    const {
+      sortMode,
+      albumIds,
+      options,
+      selectedOption,
+      isRequesting
+    } = this.state;
+
+    if (isRequesting) {
+      return (
+        <div>
+          <LibraryH1>{selectedOption}</LibraryH1>
+          <IconDiv>
+            <FontAwesomeIcon icon={faCircleNotch} size="2x" spin />
+          </IconDiv>
+
+          <Controls
+            selected={sortMode}
+            value={selectedOption}
+            onChangeSort={this.updateMode}
+            options={options[sortMode]}
+            onChangeOption={this.updateOption}
+          />
+        </div>
+      );
+    }
 
     return (
       <div>
