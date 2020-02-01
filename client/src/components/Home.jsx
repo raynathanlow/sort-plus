@@ -260,8 +260,8 @@ function Home() {
       <FeaturesDiv>
         <FeatureDiv>
           <Img src={time} alt="time" />
-          <FeatureH2>Listen to albums in full?</FeatureH2>
-          <p>Name can help you find the albums that work with your schedule.</p>
+          <FeatureH2>Enjoy listening to albums in full?</FeatureH2>
+          <p>Name can help you find albums that work with your schedule.</p>
         </FeatureDiv>
 
         <FeatureDiv>
@@ -269,10 +269,7 @@ function Home() {
           <FeatureH2>Offline support*</FeatureH2>
 
           <p>
-            Click or tap this icon{" "}
-            <FontAwesomeIcon icon={faCloudDownloadAlt} size="lg" /> after
-            logging in to save your sorted albums on your device for offline
-            use.*
+            You can download the sorted albums on your device for offline use.
           </p>
           <em>
             *Only available on Progressive Web App (PWA) supported web browsers.
