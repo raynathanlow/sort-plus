@@ -50,6 +50,7 @@ class Offline extends Component {
       isDownloading: false,
       updateAvailable: false,
       albums: {},
+      options: [],
       progress: 0,
       isSyncing: true
     };
@@ -84,9 +85,6 @@ class Offline extends Component {
         .then(response => {
           // Store savedAlbum IDs
           const albumsRes = response[0].data;
-          this.setState({
-            albums: albumsRes
-          });
           const albumIds = [];
           albumsRes.savedAlbums.forEach(savedAlbum => {
             albumIds.push(savedAlbum.id);
@@ -116,6 +114,11 @@ class Offline extends Component {
                 "%20"
               )}`
             );
+          });
+
+          this.setState({
+            albums: albumsRes,
+            options: optionsRes
           });
           // Get cached album IDs and album lists
           Promise.all([caches.open("albums"), caches.open("album-lists")]).then(
@@ -179,13 +182,13 @@ class Offline extends Component {
       updateAvailable: false
     });
 
-    const { options } = this.props;
-
-    const { albums } = this.state;
+    const { albums, options } = this.state;
 
     const savedAlbums = albums;
 
     console.log("savedAlbums", savedAlbums);
+
+    console.log("options", options);
 
     // Compile array of requests
     const requests = [];
