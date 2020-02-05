@@ -63,6 +63,7 @@ function App() {
   return (
     <Router>
       <div>
+        <Update update={update} />
         <Switch>
           <Route exact path="/">
             <Home />

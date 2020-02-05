@@ -16,6 +16,7 @@ const ReloadDiv = styled.div`
   border-radius: 7px;
   font-size: 0.7em;
   padding: 0.2em 0;
+  z-index: 20;
 
   & * {
     padding: 0.5em;
