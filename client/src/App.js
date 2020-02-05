@@ -30,7 +30,6 @@ function App() {
   const update = () => {
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
     setWaiting(false);
-    window.location.reload();
   };
 
   useEffect(() => {
