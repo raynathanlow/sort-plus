@@ -1,8 +1,6 @@
-import React, { Component } from "react";
+import React from "react";
 import styled from "styled-components";
 import { Redirect } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCloudDownloadAlt } from "@fortawesome/free-solid-svg-icons";
 
 import { getCookie } from "../Utils";
 import mockup from "../mockup.png";
@@ -233,7 +231,7 @@ function Home() {
 
   return (
     <HomeDiv>
-      <HeaderDiv>Name</HeaderDiv>
+      <HeaderDiv>41</HeaderDiv>
       <HomeH1>
         Automatically sort your saved albums by duration and release year.
       </HomeH1>

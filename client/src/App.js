@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -6,6 +6,7 @@ import {
   Switch
 } from "react-router-dom";
 import "./App.css";
+import * as serviceWorker from "./serviceWorker";
 
 import { getCookie } from "./Utils";
 
@@ -13,8 +14,53 @@ import Home from "./components/Home";
 import Login from "./components/Login";
 import Callback from "./components/Callback";
 import Main from "./components/Main";
+import Update from "./components/Update";
 
 function App() {
+  // Adapted from https://felixgerschau.com/2020/01/27/cra-pwa-update-notification.html
+  // State used to show Update notification
+  const [waiting, setWaiting] = useState(false);
+  const [waitingWorker, setWaitingWorker] = useState(null);
+
+  const onSWUpdate = registration => {
+    setWaiting(true);
+    setWaitingWorker(registration.waiting);
+  };
+
+  const update = () => {
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    setWaiting(false);
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    serviceWorker.register({ onUpdate: onSWUpdate });
+  });
+
+  if (waiting) {
+    return (
+      <Router>
+        <div>
+          <Update update={update} />
+          <Switch>
+            <Route exact path="/">
+              <Home />
+            </Route>
+            <Route path="/login">
+              <Login />
+            </Route>
+            <Route path="/callback">
+              <Callback />
+            </Route>
+            <PrivateRoute path="/library">
+              <Main />
+            </PrivateRoute>
+          </Switch>
+        </div>
+      </Router>
+    );
+  }
+
   return (
     <Router>
       <div>

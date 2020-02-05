@@ -6,6 +6,12 @@ if ("function" === typeof importScripts) {
   if (workbox) {
     console.log("Workbox is loaded");
 
+    self.addEventListener("message", event => {
+      if (event.data && event.data.type === "SKIP_WAITING") {
+        self.skipWaiting();
+      }
+    });
+
     /* injection point for manifest files.  */
     workbox.precaching.precacheAndRoute([]);
 
