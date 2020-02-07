@@ -47,7 +47,8 @@ const ButtonDiv = styled.div`
   padding: 0.5em;
 `;
 
-const Button = styled.button`
+const LogInButton = styled.a`
+  display: inline-block;
   background-color: #1db954;
   text-decoration: none;
   color: white;
@@ -245,14 +246,13 @@ function Home() {
       </HeroImgDiv>
 
       <ButtonDiv>
-        <Button
-          href={`${window.location.href}login`}
+        <LogInButton
           onClick={click}
           target="AuthWindowName"
           style={{ cursor: "pointer" }}
         >
           Log in with Spotify
-        </Button>
+        </LogInButton>
       </ButtonDiv>
 
       <FeaturesDiv>
