@@ -232,7 +232,7 @@ function Home() {
 
   return (
     <HomeDiv>
-      <HeaderDiv>69</HeaderDiv>
+      <HeaderDiv>Sort Plus</HeaderDiv>
       <HomeH1>
         Automatically sort your saved albums by duration and release year.
       </HomeH1>
