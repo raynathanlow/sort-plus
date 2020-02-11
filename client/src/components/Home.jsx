@@ -247,8 +247,9 @@ function Home() {
 
       <ButtonDiv>
         <LogInButton
-          onClick={click}
-          target="AuthWindowName"
+          /* onClick={click} */
+          /* target="AuthWindowName" */
+          href={window.location.href + "login"}
           style={{ cursor: "pointer" }}
         >
           Log in with Spotify
