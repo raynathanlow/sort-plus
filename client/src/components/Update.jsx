@@ -17,6 +17,7 @@ const ReloadDiv = styled.div`
   font-size: 0.7em;
   padding: 0.2em 0;
   z-index: 20;
+  margin: 0.5em;
 
   & * {
     padding: 0.5em;
@@ -39,7 +40,7 @@ const ReloadDiv = styled.div`
     right: 0;
     transform: initial;
     margin: 1em;
-    width: 17em;
+    width: 18em;
   }
 
   @media (min-width: 350px) and (min-height: 300px) {
