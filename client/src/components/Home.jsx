@@ -7,10 +7,32 @@ import mockup from "../mockup.png";
 import time from "../time.png";
 import cloud from "../cloud-alt.png";
 import mobile from "../mobile-mockup.png";
+import icon from "../logo.png";
 
 const HeaderDiv = styled.div`
+  display: flex;
   padding-bottom: 1em;
   padding: 0.5em;
+  justify-content: center;
+  align-items: center;
+  font-size: 1em;
+
+  @media (min-width: 350px) {
+    font-size: 1.3em;
+  }
+
+  @media (min-width: 500px) {
+    justify-content: flex-start;
+  }
+`;
+
+const Icon = styled.div`
+  width: 4em;
+  margin: 0 1em;
+
+  @media (min-width: 350px) {
+    margin: 0 1.5em;
+  }
 `;
 
 const HomeDiv = styled.div`
@@ -232,7 +254,12 @@ function Home() {
 
   return (
     <HomeDiv>
-      <HeaderDiv>Sort Plus</HeaderDiv>
+      <HeaderDiv>
+        <Icon>
+          <Img src={icon} alt="Sort Plus icon" />
+        </Icon>
+        Sort Plus
+      </HeaderDiv>
       <HomeH1>
         Automatically sort your saved albums by duration and release year.
       </HomeH1>
