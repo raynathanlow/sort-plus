@@ -51,7 +51,7 @@ const AlbumImgDiv = styled.div`
   align-items: center;
   flex: 0 1 30%;
 
-  background-color: #282828;
+  // background-color: #282828;
 `;
 
 const AlbumImg = styled.img`
@@ -65,6 +65,7 @@ const InfoDiv = styled.div`
   justify-content: space-between;
   font-size: 0.85em;
   padding-left: 0.5em;
+  line-height: 1.5em;
 `;
 
 const TracksExplicit = styled.div`

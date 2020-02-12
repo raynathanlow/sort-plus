@@ -2,6 +2,7 @@
 
 import React, { Component } from "react";
 import axios from "axios";
+import { Helmet } from "react-helmet";
 
 import * as constants from "../Constants";
 import { getCookie } from "../Utils";
@@ -37,13 +38,19 @@ class Callback extends Component {
 
         document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 30}`;
         window.location.href = "/library";
-        // window.opener.postMessage("TEST MESSAGE", constants.TARGET_ORIGIN);
       });
     }
   }
 
   render() {
-    return <div>Callback</div>;
+    return (
+      <div>
+        <Helmet>
+          <title>Logging in... - Sort Plus</title>
+        </Helmet>
+        Callback
+      </div>
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Redirect } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 import { getCookie } from "../Utils";
 import mockup from "../mockup.png";
@@ -207,46 +208,6 @@ const FeatureH2 = styled.h2`
   }
 `;
 
-// Open and use a popup for Spotify authorization
-// Adapted from https://developer.mozilla.org/en-US/docs/Web/API/Window/open#Best_practices
-
-var windowObjectReference = null; // global variable
-
-function openAuthPopup() {
-  if (windowObjectReference == null || windowObjectReference.closed) {
-    /* if the pointer to the window object in memory does not exist
-     or if such pointer exists but the window was closed */
-
-    windowObjectReference = window.open(
-      `${window.location.href}login`,
-      "AuthWindowName",
-      "resizable,scrollbars,status"
-    );
-    /* then create it. The new window will be created and
-       will be brought on top of any other window. */
-  } else {
-    windowObjectReference.focus();
-    /* else the window reference must exist and the window
-       is not closed; therefore, we can bring it back on top of any other
-       window with the focus() method. There would be no need to re-create
-       the window or to reload the referenced resource. */
-  }
-}
-
-function click() {
-  openAuthPopup();
-  return false;
-}
-
-function updateAuthInfo(e) {
-  if (windowObjectReference !== null) {
-    window.location.href = "/library";
-    windowObjectReference.close();
-  }
-}
-
-window.addEventListener("message", updateAuthInfo);
-
 function Home() {
   if (getCookie("loggedIn") === "true") {
     return <Redirect to="/library" />;
@@ -254,6 +215,9 @@ function Home() {
 
   return (
     <HomeDiv>
+      <Helmet>
+        <title>Sort Plus</title>
+      </Helmet>
       <HeaderDiv>
         <Icon>
           <Img src={icon} alt="Sort Plus icon" />
@@ -274,8 +238,6 @@ function Home() {
 
       <ButtonDiv>
         <LogInButton
-          /* onClick={click} */
-          /* target="AuthWindowName" */
           href={window.location.href + "login"}
           style={{ cursor: "pointer" }}
         >

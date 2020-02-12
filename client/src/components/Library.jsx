@@ -4,6 +4,7 @@ import styled from "styled-components";
 import LazyLoad from "react-lazyload";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
+import { Helmet } from "react-helmet";
 
 import Album from "./Album";
 import Controls from "./Controls";
@@ -29,6 +30,11 @@ const LibraryH1 = styled.h1`
 const AlbumsUl = styled.ul`
   list-style-type: none;
   padding: 0 0.5em;
+  margin-bottom: 2em;
+
+  @media (min-width: 300px) {
+    margin-bottom: 3em;
+  }
 
   @media (min-width: 200px) and (min-height: 225px) {
     margin-bottom: 6em;
@@ -173,6 +179,9 @@ class Library extends Component {
 
     return (
       <div>
+        <Helmet>
+          <title>Library - Sort Plus</title>
+        </Helmet>
         <LibraryH1>{selectedOption}</LibraryH1>
         <AlbumsUl>
           {albumIds.map(albumId => {
