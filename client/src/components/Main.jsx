@@ -92,7 +92,7 @@ class Main extends Component {
     if (!isOpen) {
       return (
         <div>
-          <Library isUpdating={isUpdating} isOnline={isOnline} />
+          <Library />
           <MenuDivClosed>
             <FontAwesomeIcon
               icon={faChevronCircleLeft}
@@ -109,7 +109,7 @@ class Main extends Component {
     if ("caches" in window) {
       return (
         <div>
-          <Library isUpdating={isUpdating} isOnline={isOnline} />
+          <Library />
           <MenuDiv>
             <FontAwesomeIcon
               icon={faChevronCircleRight}
@@ -132,7 +132,7 @@ class Main extends Component {
     // If menu is open and Cache API is NOT available
     return (
       <div>
-        <Library isUpdating={isUpdating} isOnline={isOnline} />
+        <Library />
         <MenuDiv>
           <FontAwesomeIcon
             icon={faChevronCircleRight}
