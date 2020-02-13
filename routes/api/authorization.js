@@ -96,4 +96,14 @@ router.post("/callback", (req, res) => {
     .catch(error => console.log("getTokens", error));
 });
 
+router.get("/logout", (req, res) => {
+  req.app.get("store").destroy(req.session.id, function(error) {
+    console.log("Session in store destroyed");
+    console.log("error", error);
+    req.session.destroy(err => {
+      res.send();
+    });
+  });
+});
+
 module.exports = router;

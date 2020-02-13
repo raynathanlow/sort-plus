@@ -12,6 +12,7 @@ import { getCookie } from "./Utils";
 
 import Home from "./components/Home";
 import Login from "./components/Login";
+import Logout from "./components/Logout";
 import Callback from "./components/Callback";
 import Main from "./components/Main";
 import Update from "./components/Update";
@@ -48,9 +49,13 @@ function App() {
             <Route path="/login">
               <Login />
             </Route>
+            <Route path="/logout">
+              <Logout />
+            </Route>
             <Route path="/callback">
               <Callback />
             </Route>
+
             <PrivateRoute path="/library">
               <Main />
             </PrivateRoute>
@@ -69,6 +74,9 @@ function App() {
           </Route>
           <Route path="/login">
             <Login />
+          </Route>
+          <Route path="/logout">
+            <Logout />
           </Route>
           <Route path="/callback">
             <Callback />

@@ -3,9 +3,23 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { Helmet } from "react-helmet";
+import styled from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
 import * as constants from "../Constants";
 import { getCookie } from "../Utils";
+
+const LoggingInDiv = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
 class Callback extends Component {
   componentDidMount() {
@@ -29,7 +43,7 @@ class Callback extends Component {
 
       axios({
         method: "post",
-        url: "/api/login/callback",
+        url: "/api/authorization/callback",
         data: {
           code
         }
@@ -46,9 +60,12 @@ class Callback extends Component {
     return (
       <div>
         <Helmet>
-          <title>Logging in... - Sort Plus</title>
+          <title>Finalizing authorization... - Sort Plus</title>
         </Helmet>
-        Callback
+        <LoggingInDiv>
+          <FontAwesomeIcon icon={faCircleNotch} size="2x" spin />
+          <p>Finalizing authorization...</p>
+        </LoggingInDiv>
       </div>
     );
   }

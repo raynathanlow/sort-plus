@@ -19,6 +19,7 @@ const LibraryH1 = styled.h1`
   margin: 0;
   padding-top: 0.25em;
   padding-bottom: 0.25em;
+  padding-left: 0.5em;
   font-size: 1.75em;
   z-index: 15;
 

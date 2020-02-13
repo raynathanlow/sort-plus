@@ -70,7 +70,7 @@ app.use(session(sess));
 
 app.set("store", store);
 
-app.use("/api/login", authorization);
+app.use("/api/authorization", authorization);
 app.use("/api/library", libraryRouter);
 
 app.use(express.static(path.join(__dirname, "client/build")));

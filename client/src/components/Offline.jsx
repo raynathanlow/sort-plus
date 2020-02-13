@@ -13,18 +13,10 @@ import {
 import offlinePin from "../offline-pin.svg";
 import wifiOff from "../wifi-off.svg";
 
-const OfflineDiv = styled.div`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 15;
-`;
-
 const IconDiv = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
 
   & img {
     width: 1.7em;
@@ -258,7 +250,7 @@ class Offline extends Component {
     if ("caches" in window) {
       if (isDownloading && !isUpdating && isOnline) {
         return (
-          <OfflineDiv>
+          <div>
             <ProgressDiv>
               <CircularProgressbar
                 value={Math.trunc(progress * 100)}
@@ -269,7 +261,7 @@ class Offline extends Component {
                 })}
               />
             </ProgressDiv>
-          </OfflineDiv>
+          </div>
         );
       }
 
@@ -281,17 +273,17 @@ class Offline extends Component {
         !isSyncing
       ) {
         return (
-          <OfflineDiv>
+          <div>
             <IconDiv>
               <img src={offlinePin} alt="offline pin" />
             </IconDiv>
-          </OfflineDiv>
+          </div>
         );
       }
 
       if (updateAvailable && isOnline) {
         return (
-          <OfflineDiv>
+          <div>
             <IconDiv>
               <FontAwesomeIcon
                 icon={faCloudDownloadAlt}
@@ -300,27 +292,27 @@ class Offline extends Component {
                 style={{ cursor: "pointer" }}
               />
             </IconDiv>
-          </OfflineDiv>
+          </div>
         );
       }
 
       if ((isUpdating || isSyncing) && isOnline) {
         return (
-          <OfflineDiv>
+          <div>
             <IconDiv>
               <FontAwesomeIcon icon={faSync} size="lg" spin />
             </IconDiv>
-          </OfflineDiv>
+          </div>
         );
       }
 
       if (!isOnline) {
         return (
-          <OfflineDiv>
+          <div>
             <IconDiv>
               <img src={wifiOff} alt="wifi off" />
             </IconDiv>
-          </OfflineDiv>
+          </div>
         );
       }
     }
