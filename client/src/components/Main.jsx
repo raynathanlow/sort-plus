@@ -19,7 +19,7 @@ const MenuDiv = styled.div`
   right: 0.5em;
   z-index: 15;
   color: white;
-  background-color: #1db954;
+  background-color: #282828;
   padding: 0.5em;
 
   display: flex;
