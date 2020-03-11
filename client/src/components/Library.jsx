@@ -59,7 +59,6 @@ const IconDiv = styled.div`
   color: white;
 `;
 
-// Defaults
 const defaultSortMode = "duration";
 const defaultOption = "1 m";
 
@@ -82,7 +81,12 @@ class Library extends Component {
     this.updateView();
   }
 
+  /**
+   * Update view with updated data based on default sort mode and option
+   * @return {undefined} 
+   */
   updateView = () => {
+    // Update max-age of loggedIn cookie to extend user's session by 90 days
     document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
     axios.get("/api/library/options").then(response => {
@@ -101,6 +105,11 @@ class Library extends Component {
     });
   };
 
+  /**
+   * Update mode based on user's interaction with Tabs component
+   * @param  {object} e JavaScript onClick event
+   * @return {undefined} 
+   */
   updateMode = e => {
     const { sortMode, options } = this.state;
 
@@ -113,6 +122,7 @@ class Library extends Component {
         isRequesting: true
       });
 
+      // Update max-age of loggedIn cookie to extend user's session by 90 days
       document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
       axios
@@ -127,6 +137,11 @@ class Library extends Component {
     }
   };
 
+  /**
+   * Update option of current sort mode based on user's interaction with Controls component's select element
+   * @param  {object} e JavaScript onChange event
+   * @return {undefined} 
+   */
   updateOption = e => {
     const { sortMode } = this.state;
 
@@ -137,6 +152,7 @@ class Library extends Component {
       selectedOption
     });
 
+    // Update max-age of loggedIn cookie to extend user's session by 90 days
     document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
     axios
@@ -163,6 +179,8 @@ class Library extends Component {
       return (
         <div>
           <LibraryH1>{selectedOption}</LibraryH1>
+
+          {/* Loading icon */}
           <IconDiv>
             <FontAwesomeIcon icon={faCircleNotch} size="2x" spin />
           </IconDiv>

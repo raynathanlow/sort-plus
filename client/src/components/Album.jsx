@@ -7,17 +7,17 @@ import AlbumPlaceholder from "./AlbumPlaceholder";
 import placeholderImg from "../placeholder.png";
 
 const AlbumLink = styled.span`
-  // https://stackoverflow.com/a/22074404
+  // Make div into a link - https://stackoverflow.com/a/22074404
   position: absolute;
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
-  text-decoration: none; No underlines on the link
-  z-index: 1; Places the link above everything else in the div
-  background-color: #fff; Fix to make div clickable in IE
-  opacity: 0; Fix to make div clickable in IE
-  filter: alpha(opacity=1); Fix to make div clickable in IE
+  text-decoration: none; // No underlines on the link
+  z-index: 1; // Places the link above everything else in the div
+  background-color: #fff; // Fix to make div clickable in IE
+  opacity: 0; // Fix to make div clickable in IE
+  filter: alpha(opacity=1); // Fix to make div clickable in IE
 `;
 
 const AlbumLi = styled.li`
@@ -37,7 +37,7 @@ const AlbumLi = styled.li`
 `;
 
 const AlbumDiv = styled.div`
-  position: relative; // Needs to be relative for link span
+  position: relative; // Needs to be relative for AlbumLink span
   display: flex;
   margin-bottom: 1em;
 
@@ -50,8 +50,6 @@ const AlbumImgDiv = styled.div`
   display: flex;
   align-items: center;
   flex: 0 1 30%;
-
-  // background-color: #282828;
 `;
 
 const AlbumImg = styled.img`
@@ -77,7 +75,8 @@ const TracksExplicit = styled.div`
 `;
 
 const OneLine = styled.span`
-  // https://stackoverflow.com/a/13924997 - may need some fallbacks for IE?
+  // Limit text to n lines - https://stackoverflow.com/a/13924997
+  // This solution may need some fallbacks for IE 
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -99,6 +98,11 @@ const Explicit = styled.span`
   letter-spacing: 0.015em;
 `;
 
+/**
+ * Generate string of artist names separated by comma and space
+ * @param  {array} artistNames 
+ * @return {string} 
+ */
 function generateArtistStr(artistNames) {
   const result = [];
 
@@ -123,10 +127,12 @@ class Album extends Component {
   }
 
   componentDidMount() {
+    // Update max-age of loggedIn cookie to extend user's session by 90 days
     document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
     const { albumId } = this.props;
 
+    // Get album data based on albumId prop
     axios
       .get(`/api/library/album?albumId=${albumId}`)
       .then(response => {
@@ -142,11 +148,8 @@ class Album extends Component {
         });
       })
       .catch(function(error) {
-        // handle error
+        // TODO: handle error
         console.log(error);
-      })
-      .finally(function() {
-        // always executed
       });
   }
 
@@ -160,12 +163,14 @@ class Album extends Component {
       explicit
     } = this.state;
 
+
+    // Before getting album data with albumId prop, render AlbumPlaceholder
     if (name === "") {
       return <AlbumPlaceholder />;
     }
 
+    // Otherwise, render with received album data
     return (
-      // TODO: Conditionally load AlbumPlaceholder and Album based on state - use a variable?
       <AlbumLi>
         <AlbumDiv>
           <AlbumImgDiv>

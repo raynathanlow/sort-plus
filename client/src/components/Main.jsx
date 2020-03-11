@@ -39,6 +39,8 @@ const MenuDivClosed = styled.div`
   padding: 0.5em;
 `;
 
+// Component used to check Internet connectivity, update user's library data,
+// render Library component, and render menu
 class Main extends Component {
   constructor(props) {
     super(props);
@@ -50,6 +52,7 @@ class Main extends Component {
   }
 
   componentDidMount() {
+    // Check if connected to Internet
     axios
       .get(`google.com?_t=${Math.trunc(Math.random() * 10000)}`)
       .then(response => {
@@ -62,6 +65,7 @@ class Main extends Component {
             isOnline: true
           });
 
+          // Update user's library data
           axios.get("/api/library/update").then(() => {
             console.log("Library updated!");
 
@@ -73,6 +77,10 @@ class Main extends Component {
       });
   }
 
+  /**
+   * Toggle state used to open and close menu
+   * @return {undefined} 
+   */
   toggle = () => {
     const { isOpen } = this.state;
 
@@ -81,6 +89,10 @@ class Main extends Component {
     });
   };
 
+  /**
+   * Redirect user to /logout
+   * @return {undefined} 
+   */
   logout = () => {
     window.location.href = "/logout";
   };

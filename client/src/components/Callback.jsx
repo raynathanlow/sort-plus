@@ -23,6 +23,8 @@ const LoggingInDiv = styled.div`
 
 class Callback extends Component {
   componentDidMount() {
+    // If for some reason, the user navigates to /callback while they are logged in,
+    // redirect them to /library.
     if (getCookie("loggedIn") === "true") window.location.href = "/library";
 
     const query = document.location.search;
@@ -31,16 +33,19 @@ class Callback extends Component {
     const code = searchParams.get("code") || null;
     const state = searchParams.get("state") || null;
 
-    // If there are cookies, assign with stateKey value, else, null
+    // If there are cookies, get state cookie value, else, null
     const storedState = document.cookie ? getCookie(constants.STATE_KEY) : null;
 
     if (state === null || state !== storedState) {
-      console.log("states dont match");
       // States do not match
+      console.log("states dont match");
     } else {
-      // Delete cookie
+      // States match
+
+      // Delete state cookie
       document.cookie = `${constants.STATE_KEY}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 
+      // Finalize user authorization through server
       axios({
         method: "post",
         url: "/api/authorization/callback",
@@ -48,9 +53,9 @@ class Callback extends Component {
           code
         }
       }).then(() => {
-        console.log("Setting session cookie");
-
+        // Set client-side session cookie
         document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 30}`;
+
         window.location.href = "/library";
       });
     }

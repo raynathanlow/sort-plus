@@ -27,6 +27,12 @@ const ProgressDiv = styled.div`
   width: 1.5em;
 `;
 
+/**
+ * Check if arrays are equal
+ * @param  {array} arr1 
+ * @param  {array} arr2 
+ * @return {bool} 
+ */
 function checkArraysEqual(arr1, arr2) {
   for (let i = 0; i < arr1.length; i += 1) {
     if (arr1[i] !== arr2[i]) return false;
@@ -55,6 +61,7 @@ class Offline extends Component {
     }
   }
 
+  // Invoked immediately after updating occurs
   componentDidUpdate(prevProps) {
     const { updateAvailable } = this.state;
     const { isUpdating } = this.props;
@@ -66,22 +73,21 @@ class Offline extends Component {
       !updateAvailable
     ) {
       // Determine whether or not the user needs to update their offline version
-      // Request /albums
-      console.log("Checking if cache needs updating...");
-
+      // console.log("Checking if cache needs updating...");
       axios
         .all([
           axios.get("/api/library/albums"),
           axios.get("/api/library/options")
         ])
         .then(response => {
-          // Store savedAlbum IDs
+          // Store savedAlbum IDs received from /api/library/albums
           const albumsRes = response[0].data;
           const albumIds = [];
           albumsRes.savedAlbums.forEach(savedAlbum => {
             albumIds.push(savedAlbum.id);
           });
-          // Store album lists
+
+          // Store album lists received from /api/library/options
           const optionsRes = response[1].data;
           const albumLists = [];
           // Put all options per sort mode into an array
@@ -112,6 +118,7 @@ class Offline extends Component {
             albums: albumsRes,
             options: optionsRes
           });
+
           // Get cached album IDs and album lists
           Promise.all([caches.open("albums"), caches.open("album-lists")]).then(
             values => {
@@ -119,18 +126,22 @@ class Offline extends Component {
               const albumListsCache = values[1];
               const cachedAlbumIds = [];
               const cachedAlbumLists = [];
+
               Promise.all([albumIdsCache.keys(), albumListsCache.keys()]).then(
                 keys => {
                   const albumIdsCacheKeys = keys[0];
                   const albumListsCacheKeys = keys[1];
+
                   albumIdsCacheKeys.forEach(request => {
                     // Process cacheKeys so that only the id is pushed into array
                     const equalSignIndex = request.url.indexOf("=");
                     cachedAlbumIds.push(request.url.slice(equalSignIndex + 1));
                   });
+
                   albumListsCacheKeys.forEach(request => {
                     cachedAlbumLists.push(request.url);
                   });
+                  
                   // Determine if cache update is available or not
                   // If there are discrepancies between the updated and cached versions,
                   // then update is available
@@ -145,8 +156,9 @@ class Offline extends Component {
                       updateAvailable: true,
                       isSyncing: false
                     });
-                    console.log("Update available!");
+                    // console.log("Update available!");
                   }
+
                   // If there are no discrepancies between updated and cached versions,
                   // then no update is available
                   if (
@@ -157,7 +169,7 @@ class Offline extends Component {
                       updateAvailable: false,
                       isSyncing: false
                     });
-                    console.log("No update necessary!");
+                    // console.log("No update necessary!");
                   }
                 }
               );
@@ -167,6 +179,11 @@ class Offline extends Component {
     }
   }
 
+  /**
+   * Cache all arrays of album IDs for each option, all albums' data, all album covers
+   * Keep track of caching progress
+   * @return {undefined}
+   */
   cache = () => {
     this.setState({
       isDownloading: true,
@@ -178,9 +195,9 @@ class Offline extends Component {
 
     const savedAlbums = albums;
 
-    console.log("savedAlbums", savedAlbums);
+    // console.log("savedAlbums", savedAlbums);
 
-    console.log("options", options);
+    // console.log("options", options);
 
     // Compile array of requests
     const requests = [];
@@ -221,6 +238,7 @@ class Offline extends Component {
             .get(request)
             .then(response => {
               if (response.status === 200) {
+                // Update progress 
                 successful += 1;
                 this.setState({
                   progress: successful / total
@@ -239,7 +257,6 @@ class Offline extends Component {
           isDownloading: false
         });
       });
-    // });
   };
 
   render() {
@@ -248,6 +265,7 @@ class Offline extends Component {
     const { isUpdating, isOnline } = this.props;
 
     if ("caches" in window) {
+      // Circular progress bar
       if (isDownloading && !isUpdating && isOnline) {
         return (
           <div>
@@ -265,6 +283,7 @@ class Offline extends Component {
         );
       }
 
+      // Offline pin icon
       if (
         !isDownloading &&
         !isUpdating &&
@@ -281,6 +300,7 @@ class Offline extends Component {
         );
       }
 
+      // Download available icon
       if (updateAvailable && isOnline) {
         return (
           <div>
@@ -296,6 +316,7 @@ class Offline extends Component {
         );
       }
 
+      // Syncing icon
       if ((isUpdating || isSyncing) && isOnline) {
         return (
           <div>
@@ -306,6 +327,7 @@ class Offline extends Component {
         );
       }
 
+      // Not connected to Internet icon
       if (!isOnline) {
         return (
           <div>
@@ -322,10 +344,6 @@ class Offline extends Component {
 }
 
 Offline.propTypes = {
-  options: PropTypes.shape({
-    duration: PropTypes.arrayOf(PropTypes.string).isRequired,
-    releaseYear: PropTypes.arrayOf(PropTypes.string).isRequired
-  }),
   isUpdating: PropTypes.bool.isRequired,
   isOnline: PropTypes.bool.isRequired
 };

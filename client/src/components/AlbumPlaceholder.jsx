@@ -26,7 +26,6 @@ const AlbumLi = styled.li`
 `;
 
 const AlbumDiv = styled.div`
-  position: relative; // Needs to be relative for link span
   display: flex;
   margin-bottom: 1em;
 
@@ -87,6 +86,7 @@ const TracksExplicitSkeleton = styled(Skeleton)`
   width: 33%;
 `;
 
+// Version of Album component where a grey bar replaces where album data would be
 function AlbumPlaceholder() {
   return (
     <AlbumLi>

@@ -15,18 +15,22 @@ const UserSchema = new Schema({
     required: [true, "No refresh token"]
   },
   sortedByDuration: {
+    // object where each key is an array of album IDs for each duration group
     type: {},
     required: [true, "No albums sorted by duration"]
   },
   sortedByReleaseYear: {
+    // object where each key is an array of album IDs for each release year group
     type: {},
     required: [true, "No albums sorted by release year"]
   },
   savedAlbums: {
+    // array of album IDs
     type: [{}],
     required: [true, "No saved albums"]
   },
   savedAlbumCovers: {
+    // array of URLs
     type: [String],
     required: [true, "No saved album covers"]
   }

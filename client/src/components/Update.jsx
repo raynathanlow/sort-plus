@@ -59,6 +59,7 @@ const Button = styled.button`
   // margin-left: 0.5em;
 `;
 
+// Component that appropriately reloads the PWA if there is a new version available
 function Reload(props) {
   const { update } = props;
 

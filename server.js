@@ -1,11 +1,10 @@
 const express = require("express");
 const session = require("express-session");
-const MongoStore = require("connect-mongo")(session); //
-const path = require("path");
-const mongoose = require("mongoose");
+const MongoStore = require("connect-mongo")(session); // Session store backed by MongoDB
+const path = require("path"); // NodeJS 'path' module
+const mongoose = require("mongoose"); // MongoDB object modeling tool
 
-// const cookieParser = require("cookie-parser");
-require("dotenv").config();
+require("dotenv").config(); // Dotenv config
 
 const authorization = require("./routes/api/authorization");
 const libraryRouter = require("./routes/api/library");
@@ -14,7 +13,6 @@ const app = express();
 
 // Body parsing middleware
 app.use(express.json());
-// app.use(cookieParser());
 
 // MongoDB Config
 const db = process.env.MONGO_URI;
@@ -43,7 +41,7 @@ const store = new MongoStore({ mongooseConnection: connection });
 const sess = {
   name: "id",
   secret: process.env.SESSION_SECRET,
-  rolling: true,
+  rolling: true, // Force session identifier cookie to be set on every response. Also resets expiration
   resave: false, // Forces session to be saved back to the session store
   saveUninitialized: false, // Forces 'uninitialized' session to be saved to the store
   cookie: {
@@ -56,31 +54,29 @@ const sess = {
 
 // Only use secure cookies in production
 if (app.get("env") === "production") {
-  // app.set("trust proxy", 1); // trust first proxy
   sess.cookie.secure = true; // serve secure cookies
 }
 
 app.set("trust proxy", 1); // trust first proxy
 app.use(session(sess));
 
-// store.length(function(error, len) {
-//   console.log("error", error);
-//   console.log("len", len);
-// });
-
 app.set("store", store);
 
+// Router objects
 app.use("/api/authorization", authorization);
 app.use("/api/library", libraryRouter);
 
+// Serve React files
 app.use(express.static(path.join(__dirname, "client/build")));
 
-app.get("/*", function(req, res) {
+// Serve React with client-side routing - note the /* instead of /
+app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "client/build", "index.html"));
 });
 
 const port = process.env.PORT || 3001;
 
+// Binds and listens for connections on specified host and port
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
 });

@@ -27,8 +27,11 @@ const SelectedButton = styled(Button)`
   background-color: #1db954;
 `;
 
+// Component to show the two sorting modes in tab format
 function Tabs(props) {
   const { tabs, selected, onClick } = props;
+  // selected prop used to show which tab is selected
+
   return (
     <TabsDiv>
       {tabs.map(tab => {
@@ -51,8 +54,8 @@ function Tabs(props) {
 
 Tabs.propTypes = {
   tabs: PropTypes.arrayOf(PropTypes.shape).isRequired,
-  selected: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
+  selected: PropTypes.string.isRequired
 };
 
 export default Tabs;

@@ -50,7 +50,11 @@ const SortDiv = styled.div`
 
 const OptionsDiv = styled.div`
   @media (min-width: 185px) {
-    // Vertically center options select element
+    margin-left: 0.5em;
+  }
+
+  @media (min-width: 185px) and (min-height: 225px) {
+    // Vertically center options select element 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -123,11 +127,11 @@ function Controls(props) {
 }
 
 Controls.propTypes = {
-  onChangeSort: PropTypes.func.isRequired,
   selected: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
-  onChangeOption: PropTypes.func.isRequired,
-  options: PropTypes.arrayOf(PropTypes.string).isRequired
+  onChangeSort: PropTypes.func.isRequired,
+  options: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onChangeOption: PropTypes.func.isRequired
 };
 
 export default Controls;

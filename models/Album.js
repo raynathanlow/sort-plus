@@ -17,10 +17,12 @@ const AlbumSchema = new Schema({
     required: [true, "No artist names"]
   },
   duration_ms: {
+    // duration in milliseconds
     type: Number,
     required: [true, "No duration"]
   },
   prettyDuration: {
+    // format: 1h 2m
     type: String,
     required: [true, "No pretty duration"]
   },

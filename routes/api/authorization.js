@@ -8,6 +8,11 @@ const request = require("request");
 
 const User = require("../../models/User");
 
+/**
+ * Get access and refresh tokens using code
+ * @param  {string} code returned by Spotify after user login callback
+ * @return {promise}
+ */
 function getTokens(code) {
   return new Promise((resolve, reject) => {
     const authorization = Buffer.from(
@@ -37,6 +42,11 @@ function getTokens(code) {
   });
 }
 
+/**
+ * Get user profile using access token
+ * @param  {string} accessToken returned by getTokens
+ * @return {promise}
+ */
 function getUserProfile(accessToken) {
   return new Promise((resolve, reject) => {
     request.get(
@@ -58,6 +68,11 @@ function getUserProfile(accessToken) {
   });
 }
 
+/**
+ * POST /callback method route
+ * Finalize user authorization by getting tokens and Spotify ID to start session
+ * @response {string} User's Spotify ID
+ */
 router.post("/callback", (req, res) => {
   const doc = {}; // MongoDB doc to update
 
@@ -82,25 +97,30 @@ router.post("/callback", (req, res) => {
             doc.display_name = profile.display_name;
           }
 
-          // req.app.get("store").length(function(error, len) {
-          //   console.log("error", error);
-          //   console.log("len", len);
-          // });
-
-          User.updateOne({ spotifyId }, doc, { upsert: true }, () => {
-            res.send(profile.id);
-          });
+          User.updateOne(
+            { spotifyId },
+            doc,
+            { upsert: true, runValidators: true },
+            () => {
+              res.send(profile.id);
+            }
+          );
         })
         .catch(error => console.log("getUserProfile", error));
     })
     .catch(error => console.log("getTokens", error));
 });
 
+/**
+ * GET /logout method route
+ * Destroy session in server and session store
+ * @response {undefined}
+ */
 router.get("/logout", (req, res) => {
-  req.app.get("store").destroy(req.session.id, function(error) {
+  req.app.get("store").destroy(req.session.id, error => {
     console.log("Session in store destroyed");
     console.log("error", error);
-    req.session.destroy(err => {
+    req.session.destroy(() => {
       res.send();
     });
   });

@@ -7,6 +7,10 @@ const User = require("../../models/User");
 
 const router = express.Router();
 
+/**
+ * Get access token
+ * @return {promise} Access token
+ */
 function getAccessToken(req) {
   return new Promise((resolve, reject) => {
     // Return accessToken from session object if it hasn't expired yet
@@ -18,6 +22,7 @@ function getAccessToken(req) {
       `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`
     ).toString("base64");
 
+    // Otherwise, get a new access token using refresh token
     request.post(
       {
         url: "https://accounts.spotify.com/api/token",
@@ -47,8 +52,13 @@ function getAccessToken(req) {
   });
 }
 
-// Compile array of endpoints based on total possible items
-// Function used to enable asynchronously requesting information
+/**
+ * Get all Spotify endpoints to asynchronously request
+ * Some endpoints must be paged through because a maximum limit of 50 objects can be requested at a time
+ * @param  {string} accessToken Spotify access token
+ * @param  {string} baseUrl Spotify API endpoint URL
+ * @return {promise} Array of all endpoints to request
+ */
 function getAllEndpoints(accessToken, baseUrl) {
   return new Promise((resolve, reject) => {
     const limit = 50;
@@ -82,6 +92,14 @@ function getAllEndpoints(accessToken, baseUrl) {
   });
 }
 
+/**
+ * Sort albums based on sort mode
+ * @param  {array} albums
+ * @param  {string} sortMode
+ * @return {object} Each key of object is group of related albums
+ * Ex: "duration_ms" sort mode, keys would be 1m, 2m, 3m.
+ * Ex: "releaseYear" sort mode, keys would be 1999, 2000, 2001.
+ */
 function sortAlbums(albums, sortMode) {
   // Sort in ascending order based on sortMode
   albums.sort((a, b) => a[sortMode] - b[sortMode]);
@@ -92,7 +110,7 @@ function sortAlbums(albums, sortMode) {
     key = "releaseYear";
   }
 
-  // Each group of albums will be a key in the object sorted
+  // Each group of albums will be a key in the return object: sorted
   const sorted = {};
 
   let currentGroup = albums[0][key];
@@ -116,21 +134,37 @@ function sortAlbums(albums, sortMode) {
   return sorted;
 }
 
+/**
+ * Sort albums and add them to database
+ * @param  {array} albums
+ * @param  {string} spotifyId
+ * @return {object} Each key of object is group of related albums
+ */
 function addSortedAlbumsToDb(albums, spotifyId) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const doc = {
       sortedByDuration: sortAlbums(albums, "duration_ms"),
       sortedByReleaseYear: sortAlbums(albums, "releaseYear")
     };
 
-    User.updateOne({ spotifyId }, doc, { upsert: true }, error => {
-      if (error) console.log(error);
-      resolve();
-    });
+    // Add to database
+    User.updateOne(
+      { spotifyId },
+      doc,
+      { upsert: true, runValidators: true },
+      error => {
+        if (error) console.log(error);
+        resolve();
+      }
+    );
   });
 }
 
-// Convert milliseconds to hours and minutes
+/**
+ * Convert milliseconds to hours and minutes
+ * @param  {number} ms Milliseconds
+ * @return {string} Hours and minutes in format: 1h 2m
+ */
 function toHoursAndMinutes(ms) {
   let minutes = ms / 1000 / 60;
   const hours = Math.trunc(minutes / 60);
@@ -150,7 +184,11 @@ function toHoursAndMinutes(ms) {
   return `${minutes.toString()} m`;
 }
 
-// Function that adds saved albums to database
+/**
+ * Function that adds saved album to database
+ * @param  {object} album Spotify album object
+ * @return {promise}
+ */
 function addToDb(album) {
   return new Promise((resolve, reject) => {
     // Doc used to update Album
@@ -161,7 +199,7 @@ function addToDb(album) {
 
     doc.artistNames = [];
 
-    // Only keep artist's name
+    // Only keep artist's name(s)
     album.artists.forEach(artist => {
       doc.artistNames.push(artist.name);
     });
@@ -169,17 +207,15 @@ function addToDb(album) {
     doc.duration_ms = 0;
     doc.explicit = false;
 
-    // If album object has durationMs key, this means that it was processed further to calculate
-    // the album's duration. There is a limit of 50 tracks provided in the album object
+    // If album object doesn't have duration_ms key, calculate the album's duration here
     if (!album.duration_ms) {
-      // Album doesn't have durationMs key, so album's duration can be calculated here
       album.tracks.items.forEach(track => {
         doc.duration_ms += track.duration_ms;
         if (track.explicit) doc.explicit = true;
       });
       doc.prettyDuration = toHoursAndMinutes(doc.duration_ms);
     } else {
-      // Album does have durationMs key, so use that value and the other values added while
+      // Album does have duration_ms key, so use that value and the other values added while
       // it was processed further
       doc.duration_ms = album.duration_ms;
       doc.prettyDuration = album.prettyDuration;
@@ -191,25 +227,37 @@ function addToDb(album) {
     doc.images = album.images;
     doc.totalTracks = album.tracks.total;
 
-    Album.updateOne({ id: album.id }, doc, { upsert: true }, error => {
-      if (error) reject();
-      resolve(doc);
-    });
+    // Add doc to database
+    Album.updateOne(
+      { id: album.id },
+      doc,
+      { upsert: true, runValidators: true },
+      error => {
+        if (error) reject();
+        resolve(doc);
+      }
+    );
   });
 }
 
-// Function used to process the albums that exceeded the 50 track limit
+/**
+ * Process albums that have more than 50 tracks
+ * @param  {object} album Spotify album object
+ * @param  {string} accessToken Spotify access token
+ * @return {promise}
+ */
 function processOverLimit(album, accessToken) {
   return new Promise((resolve, reject) => {
     const albumUrl = album.tracks.next;
     const index = albumUrl.indexOf("?");
     const baseUrl = albumUrl.slice(0, index);
 
-    // Get the endpoints for the tracks
+    // Get all endpoints for the tracks
     getAllEndpoints(accessToken, baseUrl).then(endpoints => {
       const tracks = [];
       let completed = 0;
 
+      // Get the data from those endpoints
       endpoints.forEach(endpoint => {
         const options = {
           url: endpoint,
@@ -219,7 +267,6 @@ function processOverLimit(album, accessToken) {
           json: true
         };
 
-        // Get the data from those endpoints
         request.get(options, (error, response, body) => {
           if (!error && response.statusCode === 200) {
             tracks.push(body.items);
@@ -254,13 +301,21 @@ function processOverLimit(album, accessToken) {
   });
 }
 
-// Go through all of the albums to see whether they can be added to database
-// right away, or it requires more processing first
+/**
+ * Iterate through all albums to see whethey they can be added to database
+ * right away or if they require more processing first
+ * @param  {array} albums Spotify album object
+ * @param  {string} accessToken Spotify access token
+ * @param  {string} spotifyId
+ * @return {promise}
+ */
 function processAlbums(albums, accessToken, spotifyId) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
+    // Array of promises so that Promise.all can be used to add sorted albums to database
+    // only after all albums have been processed
     const promises = [];
-    const updatedSavedAlbums = [];
-    const updatedSavedAlbumCovers = [];
+    const updatedSavedAlbums = []; // Array of album IDs
+    const updatedSavedAlbumCovers = []; // Array of album cover URLs
 
     albums.forEach(album => {
       const savedAlbum = {
@@ -285,7 +340,7 @@ function processAlbums(albums, accessToken, spotifyId) {
         savedAlbums: updatedSavedAlbums,
         savedAlbumCovers: updatedSavedAlbumCovers
       },
-      function(err, user) {
+      err => {
         if (err) throw err;
       }
     );
@@ -296,7 +351,11 @@ function processAlbums(albums, accessToken, spotifyId) {
   });
 }
 
-// Get all albums asynchronously
+/**
+ * Get all user's albums asynchronously
+ * @param  {string} accessToken Spotify access token
+ * @return {promise}
+ */
 function getAllAlbums(accessToken) {
   return new Promise((resolve, reject) => {
     getAllEndpoints(accessToken, "https://api.spotify.com/v1/me/albums").then(
@@ -332,8 +391,14 @@ function getAllAlbums(accessToken) {
   });
 }
 
+/**
+ * Update library
+ * @param  {string} accessToken Spotify album object
+ * @param  {string} spotifyId
+ * @return {promise}
+ */
 function updateLibrary(accessToken, spotifyId) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     getAllAlbums(accessToken).then(albums => {
       processAlbums(albums, accessToken, spotifyId).then(
         resolve("Library updated!")
@@ -342,6 +407,11 @@ function updateLibrary(accessToken, spotifyId) {
   });
 }
 
+/**
+ * GET / method route
+ * Send array of album IDs based on sort mode and option query string parameters
+ * @response {array}
+ */
 router.get("/", (req, res) => {
   // Send array of album IDs based on input/default
   let arrayToFind = "sortedByDuration";
@@ -360,7 +430,11 @@ router.get("/", (req, res) => {
     .catch(error => res.send(error));
 });
 
-// Endpoint used to get options for each sort mode
+/**
+ * GET /options method route
+ * Send object with array of options for each sort mode
+ * @response {object}
+ */
 router.get("/options", (req, res) => {
   User.findOne(
     { spotifyId: req.session.user },
@@ -377,6 +451,11 @@ router.get("/options", (req, res) => {
     .catch(error => res.send(error));
 });
 
+/**
+ * GET /albums method route
+ * Send object with array of saved album IDs and array of saved album cover URLs
+ * @response {object}
+ */
 // Endpoint used to get album IDs and album cover URLs to cache
 router.get("/albums", (req, res) => {
   User.findOne({ spotifyId: req.session.user }, "savedAlbums savedAlbumCovers")
@@ -392,6 +471,11 @@ router.get("/albums", (req, res) => {
     .catch(error => res.send(error));
 });
 
+/**
+ * GET /update method route
+ * Update library
+ * @response {string} User's Spotify ID
+ */
 router.get("/update", (req, res) => {
   getAccessToken(req).then(accessToken => {
     updateLibrary(accessToken, req.session.user).then(() => {
@@ -402,6 +486,11 @@ router.get("/update", (req, res) => {
   });
 });
 
+/**
+ * GET /album method route
+ * Send album object based on query string parameter
+ * @response {string} User's Spotify ID
+ */
 router.get("/album", (req, res) => {
   Album.findOne({ id: req.query.albumId })
     .lean()
