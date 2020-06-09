@@ -21,7 +21,7 @@ module.exports = {
     ecmaFeatures: {
       jsx: true
     },
-    ecmaVersion: 2018,
+    ecmaVersion: 6,
     sourceType: "module"
   },
   plugins: ["react", "prettier"],

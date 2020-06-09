@@ -1062,6 +1062,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-import-resolver-node@npm:^0.3.3":
+  version: 0.3.3
+  resolution: "eslint-import-resolver-node@npm:0.3.3"
+  dependencies:
+    debug: ^2.6.9
+    resolve: ^1.13.1
+  checksum: 05700934524b9ea1fea24b5de61fe7c3ae61070b67d5a42da5df3f11d8b0c3e21eff5be92a324d4ba813c16b0d0701bb99e7ca9385d5dd9788d3823c127b41bd
+  languageName: node
+  linkType: hard
+
 "eslint-module-utils@npm:^2.4.0":
   version: 2.4.1
   resolution: "eslint-module-utils@npm:2.4.1"
@@ -3646,12 +3656,30 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+resolve@^1.13.1:
+  version: 1.17.0
+  resolution: "resolve@npm:1.17.0"
+  dependencies:
+    path-parse: ^1.0.6
+  checksum: 5e3cdb8cf68c20b0c5edeb6505e7fab20c6776af0cae4b978836e557420aef7bb50acd25339bbb143b7f80533aa1988c7e827a0061aee9c237926a7d2c41f8d0
+  languageName: node
+  linkType: hard
+
 "resolve@patch:resolve@^1.10.0#builtin<compat/resolve>, resolve@patch:resolve@^1.10.1#builtin<compat/resolve>, resolve@patch:resolve@^1.11.0#builtin<compat/resolve>, resolve@patch:resolve@^1.5.0#builtin<compat/resolve>":
   version: 1.13.1
   resolution: "resolve@patch:resolve@npm%3A1.13.1#builtin<compat/resolve>::version=1.13.1&hash=e7677c"
   dependencies:
     path-parse: ^1.0.6
   checksum: 5ca50928b85bfcf86c9813aeacdea38444ee79e52e55174a51baeeb3686eb4a6e9fe5bfbd79027c2e1e35305223723a47840fc6aaf662aa12f85f35b398b205d
+  languageName: node
+  linkType: hard
+
+"resolve@patch:resolve@^1.13.1#builtin<compat/resolve>":
+  version: 1.17.0
+  resolution: "resolve@patch:resolve@npm%3A1.17.0#builtin<compat/resolve>::version=1.17.0&hash=e7677c"
+  dependencies:
+    path-parse: ^1.0.6
+  checksum: 76954aad72cd6ba127db4fcb3354a88be83f532ba7d58e166f776136bbeded410e0f3db86737fe0f3b4714627835bde078fa662887362336aaffb4bb7002a847
   languageName: node
   linkType: hard
 
@@ -3937,6 +3965,7 @@ fsevents@^1.2.7:
     eslint: ^6.7.2
     eslint-config-airbnb-base: ^14.0.0
     eslint-config-prettier: ^6.7.0
+    eslint-import-resolver-node: ^0.3.3
     eslint-plugin-import: ^2.18.2
     eslint-plugin-node: ^10.0.0
     eslint-plugin-prettier: ^3.1.1
