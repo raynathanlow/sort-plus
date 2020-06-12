@@ -3,4 +3,6 @@ node_modules/
 .yarn/*
 !.yarn/releases
 !.yarn/plugins
+!.yarn/pnpify
+!.yarn/versions
 .pnp.*
