@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import PropTypes from "prop-types";
 
 const ReloadDiv = styled.div`
   position: fixed;
@@ -71,5 +72,9 @@ function Reload(props) {
     </ReloadDiv>
   );
 }
+
+Reload.propTypes = {
+  update: PropTypes.func.isRequired
+};
 
 export default Reload;

@@ -238,7 +238,7 @@ function Home() {
 
       <ButtonDiv>
         <LogInButton
-          href={window.location.href + "login"}
+          href={`${window.location.href}login`}
           style={{ cursor: "pointer" }}
         >
           Log in with Spotify

@@ -79,7 +79,7 @@ class Main extends Component {
 
   /**
    * Toggle state used to open and close menu
-   * @return {undefined} 
+   * @return {undefined}
    */
   toggle = () => {
     const { isOpen } = this.state;
@@ -91,7 +91,7 @@ class Main extends Component {
 
   /**
    * Redirect user to /logout
-   * @return {undefined} 
+   * @return {undefined}
    */
   logout = () => {
     window.location.href = "/logout";

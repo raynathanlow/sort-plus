@@ -7,7 +7,7 @@ import "react-circular-progressbar/dist/styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSync,
-  faExclamationCircle,
+  // faExclamationCircle,
   faCloudDownloadAlt
 } from "@fortawesome/free-solid-svg-icons";
 import offlinePin from "../offline-pin.svg";
@@ -29,9 +29,9 @@ const ProgressDiv = styled.div`
 
 /**
  * Check if arrays are equal
- * @param  {array} arr1 
- * @param  {array} arr2 
- * @return {bool} 
+ * @param  {array} arr1
+ * @param  {array} arr2
+ * @return {bool}
  */
 function checkArraysEqual(arr1, arr2) {
   for (let i = 0; i < arr1.length; i += 1) {
@@ -141,7 +141,7 @@ class Offline extends Component {
                   albumListsCacheKeys.forEach(request => {
                     cachedAlbumLists.push(request.url);
                   });
-                  
+
                   // Determine if cache update is available or not
                   // If there are discrepancies between the updated and cached versions,
                   // then update is available
@@ -233,23 +233,22 @@ class Offline extends Component {
     // Go through array requests and request for them all
     axios
       .all(
-        requests.map(request =>
-          axios
-            .get(request)
-            .then(response => {
+        requests.map(
+          request =>
+            axios.get(request).then(response => {
               if (response.status === 200) {
-                // Update progress 
+                // Update progress
                 successful += 1;
                 this.setState({
                   progress: successful / total
                 });
               }
             })
-            .catch(error => {
-              this.setState({
-                error: true
-              });
-            })
+          // .catch(() => {
+          //   this.setState({
+          //     error: true
+          //   });
+          // })
         )
       )
       .finally(() => {

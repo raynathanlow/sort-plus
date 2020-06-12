@@ -54,7 +54,7 @@ const OptionsDiv = styled.div`
   }
 
   @media (min-width: 185px) and (min-height: 225px) {
-    // Vertically center options select element 
+    // Vertically center options select element
     display: flex;
     flex-direction: column;
     justify-content: center;

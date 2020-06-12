@@ -1,4 +1,4 @@
-if ("function" === typeof importScripts) {
+if (typeof importscripts === "function") {
   importScripts(
     "https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js"
   );
@@ -15,14 +15,14 @@ if ("function" === typeof importScripts) {
     /* injection point for manifest files.  */
     workbox.precaching.precacheAndRoute([]);
 
-    /* custom cache rules*/
+    /* custom cache rules */
     workbox.routing.registerNavigationRoute(
       workbox.precaching.getCacheKeyForURL("/index.html")
     );
 
     // /api/library/album
     workbox.routing.registerRoute(
-      /api\/library\/\album\b\?\balbumId=\b.+/,
+      /api\/library\/album\b\?\balbumId=\b.+/,
       new workbox.strategies.CacheFirst({
         cacheName: "albums"
       })
@@ -38,7 +38,7 @@ if ("function" === typeof importScripts) {
 
     // /api/library/options
     workbox.routing.registerRoute(
-      /api\/library\/\options\b/,
+      /api\/library\/options\b/,
       new workbox.strategies.StaleWhileRevalidate({
         cacheName: "options"
       })

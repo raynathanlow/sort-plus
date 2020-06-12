@@ -83,14 +83,14 @@ class Library extends Component {
 
   /**
    * Update view with updated data based on default sort mode and option
-   * @return {undefined} 
+   * @return {undefined}
    */
   updateView = () => {
     // Update max-age of loggedIn cookie to extend user's session by 90 days
     document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
-    axios.get("/api/library/options").then(response => {
-      const options = response.data;
+    axios.get("/api/library/options").then(optionsRes => {
+      const options = optionsRes.data;
 
       axios
         .get(`/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`)
@@ -108,7 +108,7 @@ class Library extends Component {
   /**
    * Update mode based on user's interaction with Tabs component
    * @param  {object} e JavaScript onClick event
-   * @return {undefined} 
+   * @return {undefined}
    */
   updateMode = e => {
     const { sortMode, options } = this.state;
@@ -140,7 +140,7 @@ class Library extends Component {
   /**
    * Update option of current sort mode based on user's interaction with Controls component's select element
    * @param  {object} e JavaScript onChange event
-   * @return {undefined} 
+   * @return {undefined}
    */
   updateOption = e => {
     const { sortMode } = this.state;

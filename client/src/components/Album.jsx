@@ -76,7 +76,7 @@ const TracksExplicit = styled.div`
 
 const OneLine = styled.span`
   // Limit text to n lines - https://stackoverflow.com/a/13924997
-  // This solution may need some fallbacks for IE 
+  // This solution may need some fallbacks for IE
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -100,8 +100,8 @@ const Explicit = styled.span`
 
 /**
  * Generate string of artist names separated by comma and space
- * @param  {array} artistNames 
- * @return {string} 
+ * @param  {array} artistNames
+ * @return {string}
  */
 function generateArtistStr(artistNames) {
   const result = [];
@@ -147,7 +147,7 @@ class Album extends Component {
           explicit: response.data.explicit
         });
       })
-      .catch(function(error) {
+      .catch(error => {
         // TODO: handle error
         console.log(error);
       });
@@ -162,7 +162,6 @@ class Album extends Component {
       totalTracks,
       explicit
     } = this.state;
-
 
     // Before getting album data with albumId prop, render AlbumPlaceholder
     if (name === "") {
