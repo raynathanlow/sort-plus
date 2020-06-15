@@ -3,7 +3,10 @@ import axios from "axios";
 import styled from "styled-components";
 import LazyLoad from "react-lazyload";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleNotch,
+  faExclamationTriangle
+} from "@fortawesome/free-solid-svg-icons";
 import { Helmet } from "react-helmet";
 
 import Album from "./Album";
@@ -57,6 +60,37 @@ const IconDiv = styled.div`
   top: 50%;
   transform: translate(-50%, -50%);
   color: white;
+`;
+
+const ErrorDiv = styled.div`
+  background-color: rgb(40, 40, 40);
+  color: white;
+  padding: 1.5em;
+
+  // center of the page
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  align-items: center;
+`;
+
+const ErrorChildDiv = styled.div`
+  margin: 0 1em;
+`;
+
+const ErrorType = styled.p`
+  font-size: 1.3em;
+`;
+
+const ErrorIcon = styled.div`
+  text-align: center;
+`;
+
+const LogInButton = styled.a`
+  color: #1db954;
 `;
 
 const defaultSortMode = "duration";
@@ -192,6 +226,37 @@ class Library extends Component {
             options={options[sortMode]}
             onChangeOption={this.updateOption}
           />
+        </div>
+      );
+    }
+
+    // When server sends no albums, then there is a problem with the session
+    // Wouldn't this situation also happen if the user actually doesn't have
+    // any saved albums?
+    // Maybe when I am getting the update from /library/update, I can check
+    // for an error server side
+    if (albumIds.length === undefined) {
+      // Delete loggedIn cookie
+      document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+
+      return (
+        <div>
+          <Helmet>
+            <title>Session Error - Sort Plus</title>
+          </Helmet>
+          <ErrorDiv>
+            <ErrorChildDiv>
+              <ErrorIcon>
+                <FontAwesomeIcon icon={faExclamationTriangle} size="3x" />
+              </ErrorIcon>
+            </ErrorChildDiv>
+            <ErrorChildDiv>
+              <ErrorType>Session Error</ErrorType>
+              <p>
+                Please <LogInButton href="login">log in</LogInButton> again.
+              </p>
+            </ErrorChildDiv>
+          </ErrorDiv>
         </div>
       );
     }
