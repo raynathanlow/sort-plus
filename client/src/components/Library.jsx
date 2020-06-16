@@ -5,7 +5,8 @@ import LazyLoad from "react-lazyload";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleNotch,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { Helmet } from "react-helmet";
 
@@ -82,15 +83,30 @@ const ErrorChildDiv = styled.div`
 `;
 
 const ErrorType = styled.p`
+  font-weight: bold;
   font-size: 1.3em;
-`;
-
-const ErrorIcon = styled.div`
-  text-align: center;
 `;
 
 const LogInButton = styled.a`
   color: #1db954;
+`;
+
+const NoAlbumsDiv = styled.div`
+  padding: 0.5em;
+  text-align: center;
+  color: white;
+
+  @media (min-height: 400px) {
+    // center of the page
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  @media (min-width: 260px) {
+    margin: 2em 0;
+  }
 `;
 
 const defaultSortMode = "duration";
@@ -236,28 +252,34 @@ class Library extends Component {
     // Maybe when I am getting the update from /library/update, I can check
     // for an error server side
     if (albumIds.length === undefined) {
+      // Session Error
+      // <div>
+      //   <Helmet>
+      //     <title>Session Error - Sort Plus</title>
+      //   </Helmet>
+      //   <ErrorDiv>
+      //     <ErrorChildDiv>
+      //       <FontAwesomeIcon icon={faExclamationTriangle} size="3x" />
+      //     </ErrorChildDiv>
+      //     <ErrorChildDiv>
+      //       <ErrorType>Session Error</ErrorType>
+      //       <p>
+      //         Please <LogInButton href="login">log in</LogInButton> again.
+      //       </p>
+      //     </ErrorChildDiv>
+      //   </ErrorDiv>
+      // </div>
+
       // Delete loggedIn cookie
-      document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+      // document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
 
       return (
-        <div>
-          <Helmet>
-            <title>Session Error - Sort Plus</title>
-          </Helmet>
-          <ErrorDiv>
-            <ErrorChildDiv>
-              <ErrorIcon>
-                <FontAwesomeIcon icon={faExclamationTriangle} size="3x" />
-              </ErrorIcon>
-            </ErrorChildDiv>
-            <ErrorChildDiv>
-              <ErrorType>Session Error</ErrorType>
-              <p>
-                Please <LogInButton href="login">log in</LogInButton> again.
-              </p>
-            </ErrorChildDiv>
-          </ErrorDiv>
-        </div>
+        // User has no saved albums
+        <NoAlbumsDiv>
+          <FontAwesomeIcon icon={faBan} size="4x" />
+          <ErrorType>No Saved Albums in Your Spotify Library</ErrorType>
+          <p>Save some albums first then refresh the page</p>
+        </NoAlbumsDiv>
       );
     }
 
