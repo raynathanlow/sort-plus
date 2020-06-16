@@ -275,11 +275,16 @@ class Library extends Component {
 
       return (
         // User has no saved albums
-        <NoAlbumsDiv>
-          <FontAwesomeIcon icon={faBan} size="4x" />
-          <ErrorType>No Saved Albums in Your Spotify Library</ErrorType>
-          <p>Save some albums first then refresh the page</p>
-        </NoAlbumsDiv>
+        <div>
+          <Helmet>
+            <title>No Saved Albums - Sort Plus</title>
+          </Helmet>
+          <NoAlbumsDiv>
+            <FontAwesomeIcon icon={faBan} size="4x" />
+            <ErrorType>No Saved Albums in Your Spotify Library</ErrorType>
+            <p>Save some albums first then refresh the page</p>
+          </NoAlbumsDiv>
+        </div>
       );
     }
 
