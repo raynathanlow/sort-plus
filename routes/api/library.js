@@ -334,11 +334,14 @@ function processAlbums(albums, accessToken, spotifyId) {
     });
 
     // Update savedAlbums and savedAlbumCovers
-    User.findOneAndUpdate(
+    User.updateOne(
       { spotifyId },
       {
         savedAlbums: updatedSavedAlbums,
         savedAlbumCovers: updatedSavedAlbumCovers
+      },
+      {
+        upsert: true
       },
       err => {
         if (err) throw err;
@@ -363,29 +366,33 @@ function getAllAlbums(accessToken) {
         const albums = [];
         let completed = 0;
 
-        endpoints.forEach(endpoint => {
-          const options = {
-            url: endpoint,
-            headers: {
-              Authorization: `Bearer ${accessToken}`
-            },
-            json: true
-          };
+        if (endpoints.length > 0) {
+          endpoints.forEach(endpoint => {
+            const options = {
+              url: endpoint,
+              headers: {
+                Authorization: `Bearer ${accessToken}`
+              },
+              json: true
+            };
 
-          request.get(options, (error, response, body) => {
-            if (!error && response.statusCode === 200) {
-              albums.push(body.items);
+            request.get(options, (error, response, body) => {
+              if (!error && response.statusCode === 200) {
+                albums.push(body.items);
 
-              if (completed === endpoints.length - 1) {
-                resolve(albums.flat());
+                if (completed === endpoints.length - 1) {
+                  resolve(albums.flat());
+                }
+
+                completed += 1;
+              } else {
+                reject();
               }
-
-              completed += 1;
-            } else {
-              reject();
-            }
+            });
           });
-        });
+        } else {
+          reject(new Error("No albums"));
+        }
       }
     );
   });
@@ -399,11 +406,34 @@ function getAllAlbums(accessToken) {
  */
 function updateLibrary(accessToken, spotifyId) {
   return new Promise(resolve => {
-    getAllAlbums(accessToken).then(albums => {
-      processAlbums(albums, accessToken, spotifyId).then(
-        resolve("Library updated!")
-      );
-    });
+    getAllAlbums(accessToken)
+      .then(albums => {
+        processAlbums(albums, accessToken, spotifyId).then(
+          resolve("Library updated!")
+        );
+      })
+      .catch(error => {
+        if (error.message === "No albums") {
+          // Update library with 0 albums
+          User.updateOne(
+            { spotifyId },
+            {
+              savedAlbums: [],
+              savedAlbumCovers: [],
+              sortedByDuration: {},
+              sortedByReleaseYear: {}
+            },
+            {
+              upsert: true
+            },
+            err => {
+              if (err) throw err;
+            }
+          );
+
+          resolve("Library updated!");
+        }
+      });
   });
 }
 
