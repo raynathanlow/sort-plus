@@ -123,7 +123,9 @@ class Library extends Component {
         duration: [],
         releaseYear: []
       },
-      isRequesting: false
+      isRequesting: false,
+      invalidSession: false,
+      noSavedAlbums: false
     };
   }
 
@@ -139,20 +141,53 @@ class Library extends Component {
     // Update max-age of loggedIn cookie to extend user's session by 90 days
     document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
 
-    axios.get("/api/library/options").then(optionsRes => {
-      const options = optionsRes.data;
+    axios
+      .get("/api/library/options")
+      .then(optionsRes => {
+        const options = optionsRes.data;
 
-      axios
-        .get(`/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`)
-        .then(response => {
-          console.log("Update current view!");
-
+        if (
+          Object.keys(options).length === 0 &&
+          options.constructor === Object
+        ) {
           this.setState({
-            options,
-            albumIds: response.data
+            noSavedAlbums: true
           });
-        });
-    });
+        } else {
+          axios
+            .get(
+              `/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`
+            )
+            .then(response => {
+              console.log("Update current view!");
+
+              this.setState({
+                options,
+                albumIds: response.data
+              });
+            })
+            .catch(error => {
+              if (
+                error.response.status === 401 &&
+                error.response.data === "Invalid session"
+              ) {
+                this.setState({
+                  invalidSession: true
+                });
+              }
+            });
+        }
+      })
+      .catch(error => {
+        if (
+          error.response.status === 401 &&
+          error.response.data === "Invalid session"
+        ) {
+          this.setState({
+            invalidSession: true
+          });
+        }
+      });
   };
 
   /**
@@ -183,6 +218,16 @@ class Library extends Component {
             selectedOption: firstOption,
             isRequesting: false
           });
+        })
+        .catch(error => {
+          if (
+            error.response.status === 401 &&
+            error.response.data === "Invalid session"
+          ) {
+            this.setState({
+              invalidSession: true
+            });
+          }
         });
     }
   };
@@ -213,6 +258,16 @@ class Library extends Component {
           selectedOption,
           isRequesting: false
         });
+      })
+      .catch(error => {
+        if (
+          error.response.status === 401 &&
+          error.response.data === "Invalid session"
+        ) {
+          this.setState({
+            invalidSession: true
+          });
+        }
       });
   };
 
@@ -222,7 +277,9 @@ class Library extends Component {
       albumIds,
       options,
       selectedOption,
-      isRequesting
+      isRequesting,
+      invalidSession,
+      noSavedAlbums
     } = this.state;
 
     if (isRequesting) {
@@ -246,35 +303,35 @@ class Library extends Component {
       );
     }
 
-    // When server sends no albums, then there is a problem with the session
-    // Wouldn't this situation also happen if the user actually doesn't have
-    // any saved albums?
-    // Maybe when I am getting the update from /library/update, I can check
-    // for an error server side
-    if (albumIds.length === undefined) {
-      // Session Error
-      // <div>
-      //   <Helmet>
-      //     <title>Session Error - Sort Plus</title>
-      //   </Helmet>
-      //   <ErrorDiv>
-      //     <ErrorChildDiv>
-      //       <FontAwesomeIcon icon={faExclamationTriangle} size="3x" />
-      //     </ErrorChildDiv>
-      //     <ErrorChildDiv>
-      //       <ErrorType>Session Error</ErrorType>
-      //       <p>
-      //         Please <LogInButton href="login">log in</LogInButton> again.
-      //       </p>
-      //     </ErrorChildDiv>
-      //   </ErrorDiv>
-      // </div>
-
+    // When session is invalid
+    if (invalidSession) {
       // Delete loggedIn cookie
-      // document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+      document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
 
       return (
-        // User has no saved albums
+        // Session Error
+        <div>
+          <Helmet>
+            <title>Session Error - Sort Plus</title>
+          </Helmet>
+          <ErrorDiv>
+            <ErrorChildDiv>
+              <FontAwesomeIcon icon={faExclamationTriangle} size="3x" />
+            </ErrorChildDiv>
+            <ErrorChildDiv>
+              <ErrorType>Session Error</ErrorType>
+              <p>
+                Please <LogInButton href="login">log in</LogInButton> again.
+              </p>
+            </ErrorChildDiv>
+          </ErrorDiv>
+        </div>
+      );
+    }
+
+    // When user has no saved albums
+    if (noSavedAlbums) {
+      return (
         <div>
           <Helmet>
             <title>No Saved Albums - Sort Plus</title>

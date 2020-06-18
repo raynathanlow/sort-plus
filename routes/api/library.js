@@ -407,6 +407,25 @@ function updateLibrary(accessToken, spotifyId) {
   });
 }
 
+// router-level error handling middleware
+// check that the session is valid
+router.use((req, res, next) => {
+  if (req.session.accessToken === undefined) {
+    next("Invalid session");
+  }
+
+  next();
+});
+
+// error handler
+router.use((err, req, res, next) => {
+  console.error(err);
+
+  if (err === "Invalid session") {
+    res.status(401).send("Invalid session");
+  }
+});
+
 /**
  * GET / method route
  * Send array of album IDs based on sort mode and option query string parameters
