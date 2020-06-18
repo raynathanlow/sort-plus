@@ -119,7 +119,7 @@ const NoAlbumsDiv = styled.div`
 `;
 
 const defaultSortMode = "duration";
-const defaultOption = "1 m";
+let defaultOption = "1 m";
 
 class Library extends Component {
   constructor(props) {
@@ -155,14 +155,9 @@ class Library extends Component {
       .then(optionsRes => {
         const options = optionsRes.data;
 
-        if (
-          Object.keys(options).length === 0 &&
-          options.constructor === Object
-        ) {
-          this.setState({
-            noSavedAlbums: true
-          });
-        } else {
+        if (options.duration.length > 0) {
+          [defaultOption] = options.duration;
+
           axios
             .get(
               `/api/library?sortMode=${defaultSortMode}&option=${defaultOption}`
@@ -172,7 +167,8 @@ class Library extends Component {
 
               this.setState({
                 options,
-                albumIds: response.data
+                albumIds: response.data,
+                selectedOption: defaultOption
               });
             })
             .catch(error => {
@@ -185,6 +181,10 @@ class Library extends Component {
                 });
               }
             });
+        } else {
+          this.setState({
+            noSavedAlbums: true
+          });
         }
       })
       .catch(error => {
