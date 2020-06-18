@@ -66,16 +66,25 @@ const IconDiv = styled.div`
 const ErrorDiv = styled.div`
   background-color: rgb(40, 40, 40);
   color: white;
-  padding: 1.5em;
 
-  // center of the page
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  padding: 0.5em;
 
-  display: flex;
-  align-items: center;
+  @media (min-width: 150px) {
+    padding: 1em;
+  }
+
+  @media (min-height: 230px) {
+    // center of the page
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  @media (min-width: 430px) {
+    display: flex;
+    align-items: center;
+  }
 `;
 
 const ErrorChildDiv = styled.div`
