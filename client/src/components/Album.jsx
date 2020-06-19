@@ -127,9 +127,6 @@ class Album extends Component {
   }
 
   componentDidMount() {
-    // Update max-age of loggedIn cookie to extend user's session by 90 days
-    document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
-
     const { albumId } = this.props;
 
     // Get album data based on albumId prop

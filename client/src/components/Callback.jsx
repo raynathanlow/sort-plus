@@ -54,7 +54,7 @@ class Callback extends Component {
         }
       }).then(() => {
         // Set client-side session cookie
-        document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 30}`;
+        document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
 
         window.location.href = "/library";
       });
