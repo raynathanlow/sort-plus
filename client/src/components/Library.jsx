@@ -218,7 +218,7 @@ class Library extends Component {
       });
 
       // Update max-age of loggedIn cookie to extend user's session by 90 days
-      document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
+      document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
 
       axios
         .get(`/api/library?sortMode=${e.target.value}&option=${firstOption}`)
@@ -258,7 +258,7 @@ class Library extends Component {
     });
 
     // Update max-age of loggedIn cookie to extend user's session by 90 days
-    document.cookie = `loggedIn=true; max-age=${60 * 60 * 24 * 90}`;
+    document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
 
     axios
       .get(`/api/library?sortMode=${sortMode}&option=${selectedOption}`)
