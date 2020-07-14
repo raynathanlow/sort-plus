@@ -36,12 +36,16 @@ class Callback extends Component {
     // If there are cookies, get state cookie value, else, null
     const storedState = document.cookie ? getCookie(constants.STATE_KEY) : null;
 
+    console.log("document.cookie: ", document.cookie);
+    console.log("storedState: ", storedState);
+    console.log("state: ", state);
+
     if (state === null || state !== storedState) {
       // States do not match
       console.log("states dont match");
     } else {
       // States match
-
+      console.log("states match");
       // Delete state cookie
       document.cookie = `${constants.STATE_KEY}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 
@@ -54,7 +58,11 @@ class Callback extends Component {
         }
       }).then(() => {
         // Set client-side session cookie
-        document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+        if (window.location.hostname === "localhost") {
+          document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; samesite=strict`;
+        } else {
+          document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+        }
 
         window.location.href = "/library";
       });

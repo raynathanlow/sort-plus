@@ -39,8 +39,11 @@ const MenuDivClosed = styled.div`
   padding: 0.5em;
 `;
 
-// Component used to check Internet connectivity, update user's library data,
-// render Library component, and render menu
+/**
+ * Checks for Internet connectivity before updating user's library data
+ * Renders Library component and menu for downloading data for offline
+ * use and logging out
+ */
 class Main extends Component {
   constructor(props) {
     super(props);

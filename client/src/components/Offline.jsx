@@ -41,6 +41,11 @@ function checkArraysEqual(arr1, arr2) {
   return true;
 }
 
+/**
+ * Determines status of caching data for offline use
+ * Renders different icon based on status where one icon can be interacted
+ * with to cache data for offline use
+ */
 class Offline extends Component {
   constructor(props) {
     super(props);
@@ -50,85 +55,89 @@ class Offline extends Component {
       albums: {},
       options: [],
       progress: 0,
-      isSyncing: true
+      isSyncing: false
     };
   }
 
   componentDidMount() {
+    console.log("Offline - componentDidMount");
+
     if ("caches" in window) {
       // Cache wifi off icon
       axios.get(wifiOff);
-    }
-  }
 
-  // Invoked immediately after updating occurs
-  componentDidUpdate(prevProps) {
-    const { updateAvailable } = this.state;
-    const { isUpdating } = this.props;
+      const { isOnline } = this.props;
 
-    if (
-      "caches" in window &&
-      prevProps.isUpdating &&
-      !isUpdating &&
-      !updateAvailable
-    ) {
-      // Determine whether or not the user needs to update their offline version
-      // console.log("Checking if cache needs updating...");
-      axios
-        .all([
-          axios.get("/api/library/albums"),
-          axios.get("/api/library/options")
-        ])
-        .then(response => {
-          // Store savedAlbum IDs received from /api/library/albums
-          const albumsRes = response[0].data;
-          const albumIds = [];
-          albumsRes.savedAlbums.forEach(savedAlbum => {
-            albumIds.push(savedAlbum.id);
-          });
+      if (isOnline) {
+        this.setState({
+          isSyncing: true
+        });
 
-          // Store album lists received from /api/library/options
-          const optionsRes = response[1].data;
-          const albumLists = [];
-          // Put all options per sort mode into an array
-          // For each option, replace the spaces with %20 to match the cached album lists
-          optionsRes.duration.forEach(durationOption => {
-            albumLists.push(
-              `${
-                window.location.origin
-              }/api/library?sortMode=duration&option=${durationOption.replace(
-                / /g,
-                "%20"
-              )}`
-            );
-          });
-          optionsRes.releaseYear.forEach(yearOption => {
-            yearOption.replace(/ /g, "%20");
-            albumLists.push(
-              `${
-                window.location.origin
-              }/api/library?sortMode=releaseYear&option=${yearOption.replace(
-                / /g,
-                "%20"
-              )}`
-            );
-          });
+        // Update user's library data
+        axios.get("/api/library/update").then(() => {
+          console.log("Library updated!");
 
-          this.setState({
-            albums: albumsRes,
-            options: optionsRes
-          });
+          // Determine whether or not the user needs to update their offline version
+          // console.log("Checking if cache needs updating...");
+          axios
+            .all([
+              axios.get("/api/library/albums"),
+              axios.get("/api/library/options")
+            ])
+            .then(response => {
+              // Store savedAlbum IDs received from /api/library/albums
+              const albumsRes = response[0].data;
+              const albumIds = [];
+              albumsRes.savedAlbums.forEach(savedAlbum => {
+                albumIds.push(savedAlbum.id);
+              });
 
-          // Get cached album IDs and album lists
-          Promise.all([caches.open("albums"), caches.open("album-lists")]).then(
-            values => {
-              const albumIdsCache = values[0];
-              const albumListsCache = values[1];
-              const cachedAlbumIds = [];
-              const cachedAlbumLists = [];
+              // Store album lists received from /api/library/options
+              const optionsRes = response[1].data;
+              const albumLists = [];
+              // Put all options per sort mode into an array
+              // For each option, replace the spaces with %20 to match the cached album lists
+              optionsRes.duration.forEach(durationOption => {
+                albumLists.push(
+                  `${
+                    window.location.origin
+                  }/api/library?sortMode=duration&option=${durationOption.replace(
+                    / /g,
+                    "%20"
+                  )}`
+                );
+              });
+              optionsRes.releaseYear.forEach(yearOption => {
+                yearOption.replace(/ /g, "%20");
+                albumLists.push(
+                  `${
+                    window.location.origin
+                  }/api/library?sortMode=releaseYear&option=${yearOption.replace(
+                    / /g,
+                    "%20"
+                  )}`
+                );
+              });
 
-              Promise.all([albumIdsCache.keys(), albumListsCache.keys()]).then(
-                keys => {
+              this.setState({
+                albums: albumsRes,
+                options: optionsRes
+              });
+
+              // Get cached album IDs and album lists
+              Promise.all([
+                caches.open("albums"),
+                caches.open("album-lists")
+              ]).then(values => {
+                const albumIdsCache = values[0];
+                const albumListsCache = values[1];
+                const cachedAlbumIds = [];
+                const cachedAlbumLists = [];
+
+                Promise.all([
+                  albumIdsCache.keys(),
+                  albumListsCache.keys()
+                ]).then(keys => {
                   const albumIdsCacheKeys = keys[0];
                   const albumListsCacheKeys = keys[1];
 
@@ -143,6 +152,12 @@ class Offline extends Component {
                   });
 
                   // Determine if cache update is available or not
+
+                  console.log(albumIds.sort());
+                  console.log(cachedAlbumIds.sort());
+                  console.log(albumLists.sort());
+                  console.log(cachedAlbumLists.sort());
+
                   // If there are discrepancies between the updated and cached versions,
                   // then update is available
                   if (
@@ -171,11 +186,11 @@ class Offline extends Component {
                     });
                     // console.log("No update necessary!");
                   }
-                }
-              );
-            }
-          );
+                });
+              });
+            });
         });
+      }
     }
   }
 
@@ -188,16 +203,15 @@ class Offline extends Component {
     this.setState({
       isDownloading: true,
       progress: 0,
-      updateAvailable: false
     });
 
     const { albums, options } = this.state;
 
     const savedAlbums = albums;
 
-    // console.log("savedAlbums", savedAlbums);
+    console.log("savedAlbums", savedAlbums);
 
-    // console.log("options", options);
+    console.log("options", options);
 
     // Compile array of requests
     const requests = [];
@@ -227,6 +241,8 @@ class Offline extends Component {
       requests.push(savedAlbumCover);
     });
 
+    console.log(requests);
+
     let successful = 0;
     const total = requests.length;
 
@@ -253,7 +269,8 @@ class Offline extends Component {
       )
       .finally(() => {
         this.setState({
-          isDownloading: false
+          isDownloading: false,
+          updateAvailable: false
         });
       });
   };
@@ -261,73 +278,62 @@ class Offline extends Component {
   render() {
     const { isDownloading, progress, updateAvailable, isSyncing } = this.state;
 
-    const { isUpdating, isOnline } = this.props;
+    const { isOnline } = this.props;
 
     if ("caches" in window) {
-      // Circular progress bar
-      if (isDownloading && !isUpdating && isOnline) {
-        return (
-          <div>
-            <ProgressDiv>
-              <CircularProgressbar
-                value={Math.trunc(progress * 100)}
-                strokeWidth={15}
-                styles={buildStyles({
-                  pathColor: "#1db954",
-                  trailColor: "#ffffff"
-                })}
-              />
-            </ProgressDiv>
-          </div>
-        );
-      }
+      if (isOnline) {
+        if (isSyncing) {
+          return (
+            <div>
+              <IconDiv>
+                <FontAwesomeIcon icon={faSync} size="lg" spin />
+              </IconDiv>
+            </div>
+          );
+        }
 
-      // Offline pin icon
-      if (
-        !isDownloading &&
-        !isUpdating &&
-        !updateAvailable &&
-        isOnline &&
-        !isSyncing
-      ) {
-        return (
-          <div>
-            <IconDiv>
-              <img src={offlinePin} alt="offline pin" />
-            </IconDiv>
-          </div>
-        );
-      }
+        if (isDownloading && updateAvailable) {
+          return (
+            <div>
+              <ProgressDiv>
+                <CircularProgressbar
+                  value={Math.trunc(progress * 100)}
+                  strokeWidth={15}
+                  styles={buildStyles({
+                    pathColor: "#1db954",
+                    trailColor: "#ffffff"
+                  })}
+                />
+              </ProgressDiv>
+            </div>
+          );
+        }
 
-      // Download available icon
-      if (updateAvailable && isOnline) {
-        return (
-          <div>
-            <IconDiv>
-              <FontAwesomeIcon
-                icon={faCloudDownloadAlt}
-                size="lg"
-                onClick={this.cache}
-                style={{ cursor: "pointer" }}
-              />
-            </IconDiv>
-          </div>
-        );
-      }
+        if (updateAvailable) {
+          return (
+            <div>
+              <IconDiv>
+                <FontAwesomeIcon
+                  icon={faCloudDownloadAlt}
+                  size="lg"
+                  onClick={this.cache}
+                  style={{ cursor: "pointer" }}
+                />
+              </IconDiv>
+            </div>
+          );
+        }
 
-      // Syncing icon
-      if ((isUpdating || isSyncing) && isOnline) {
-        return (
-          <div>
-            <IconDiv>
-              <FontAwesomeIcon icon={faSync} size="lg" spin />
-            </IconDiv>
-          </div>
-        );
-      }
-
-      // Not connected to Internet icon
-      if (!isOnline) {
+        if (!updateAvailable) {
+          return (
+            <div>
+              <IconDiv>
+                <img src={offlinePin} alt="offline pin" />
+              </IconDiv>
+            </div>
+          );
+        }
+      } else {
         return (
           <div>
             <IconDiv>

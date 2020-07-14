@@ -1,4 +1,4 @@
-if (typeof importscripts === "function") {
+if (typeof importScripts === "function") {
   importScripts(
     "https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js"
   );
