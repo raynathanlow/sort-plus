@@ -149,7 +149,11 @@ class Library extends Component {
    */
   updateView = () => {
     // Update max-age of loggedIn cookie to extend user's session by 90 days
-    document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+    if (window.location.hostname === "localhost") {
+      document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; samesite=strict`;
+    } else {
+      document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+    }
 
     axios
       .get("/api/library/options")
@@ -218,7 +222,11 @@ class Library extends Component {
       });
 
       // Update max-age of loggedIn cookie to extend user's session by 90 days
-      document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+      if (window.location.hostname === "localhost") {
+        document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; samesite=strict`;
+      } else {
+        document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+      }
 
       axios
         .get(`/api/library?sortMode=${e.target.value}&option=${firstOption}`)
@@ -258,7 +266,11 @@ class Library extends Component {
     });
 
     // Update max-age of loggedIn cookie to extend user's session by 90 days
-    document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+    if (window.location.hostname === "localhost") {
+      document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; samesite=strict`;
+    } else {
+      document.cookie = `loggedIn=true; max-age=${constants.SESSION_LENGTH}; secure; samesite=strict`;
+    }
 
     axios
       .get(`/api/library?sortMode=${sortMode}&option=${selectedOption}`)
@@ -316,7 +328,7 @@ class Library extends Component {
     // When session is invalid
     if (invalidSession) {
       // Delete loggedIn cookie
-      document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+      document.cookie = `loggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; secure`;
 
       return (
         // Session Error

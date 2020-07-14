@@ -20,7 +20,7 @@ class Logout extends Component {
   componentDidMount() {
     // Log user out server-side first, then client-side
     axios.get(`/api/authorization/logout`).then(() => {
-      document.cookie = `loggedIn=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+      document.cookie = `loggedIn=;expires=Thu, 01 Jan 1970 00:00:01 GMT; secure`;
       window.location.href = "../"; // Redirect back to home page
     });
   }

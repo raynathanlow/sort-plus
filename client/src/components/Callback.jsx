@@ -36,10 +36,6 @@ class Callback extends Component {
     // If there are cookies, get state cookie value, else, null
     const storedState = document.cookie ? getCookie(constants.STATE_KEY) : null;
 
-    console.log("document.cookie: ", document.cookie);
-    console.log("storedState: ", storedState);
-    console.log("state: ", state);
-
     if (state === null || state !== storedState) {
       // States do not match
       console.log("states dont match");
@@ -47,7 +43,7 @@ class Callback extends Component {
       // States match
       console.log("states match");
       // Delete state cookie
-      document.cookie = `${constants.STATE_KEY}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+      document.cookie = `${constants.STATE_KEY}=;expires=Thu, 01 Jan 1970 00:00:01 GMT; secure`;
 
       // Finalize user authorization through server
       axios({

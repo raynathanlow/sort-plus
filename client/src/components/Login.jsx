@@ -28,7 +28,7 @@ class Login extends Component {
     // Generate state
     const state = generateRandomString(16);
     // Set state as cookie
-    document.cookie = `${constants.STATE_KEY}=${state}`;
+    document.cookie = `${constants.STATE_KEY}=${state}; secure`;
 
     // Prepare Spotify authorization URL
     const authUrl = `https://accounts.spotify.com/authorize?client_id=${constants.CLIENT_ID}&response_type=code&redirect_uri=${constants.REDIRECT_URI}&scope=user-library-read&state=${state}&show_dialog=true`;
