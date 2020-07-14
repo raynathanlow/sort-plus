@@ -170,7 +170,7 @@ class Album extends Component {
       <AlbumLi>
         <AlbumDiv>
           <AlbumImgDiv>
-            <AlbumImg src={image} alt={name} />
+            <AlbumImg src={image} alt="" />
           </AlbumImgDiv>
 
           <a target="_blank" rel="noopener noreferrer" href={publicUrl}>
